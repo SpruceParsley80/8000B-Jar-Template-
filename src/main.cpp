@@ -2,6 +2,8 @@
 
 using namespace vex;
 competition Competition;
+//big thanks to ben from my sister team for helping me change from pros to jar
+//i couldve done it myself probably but it would've been harder and we didnt have much time so
 
 /*---------------------------------------------------------------------------*/
 /*                             VEXcode Config                                */
