@@ -109,7 +109,7 @@ PORT3,     -PORT4,
 
 int current_auton_selection = 0;
 bool auto_started = false;
-bool scraper = false;
+bool scraping = false;
 
 /**
  * Function before autonomous. It prints the current auton number on the screen
@@ -195,12 +195,16 @@ void usercontrol(void) {
   while (1) {
     int R1L1Speed = (Controller.ButtonL1.pressing() * (-1) + Controller.ButtonR1.pressing()) * 127; 
     int R2L2Speed = (Controller.ButtonL2.pressing() * (-1) + Controller.ButtonR2.pressing()) * 127; 
-
+    if (Controller.ButtonA.pressing()) {
+      while (Controller.ButtonA.pressing()) {
+        scraping = !scraping;
+      }
+    }
     bottomIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     lowerMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     upperMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     topIntake.spin(directionType::fwd, R2L2Speed, vex::velocityUnits::pct);
-
+    scraper.set(scraping);
 
     chassis.control_arcade();
     wait(20, msec); // Sleep the task for a short amount of time to

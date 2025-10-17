@@ -19,7 +19,7 @@ motor lowerMiddleIntake = motor(PORT10, ratio6_1, true);
 motor upperMiddleIntake = motor(PORT9, ratio6_1, true);
 motor topIntake = motor(PORT21, ratio6_1, true);
 
-digital_out scraper = digital_out(Brain.ThreeWirePort.A);  //not put
+digital_out scraper = digital_out(Brain.ThreeWirePort.H);  //not put
 
 // digital_out descore = digital_out(Brain.ThreeWirePort.A); // Not put 
 
