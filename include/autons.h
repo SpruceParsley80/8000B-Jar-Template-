@@ -4,7 +4,7 @@
 class Drive;
 
 extern Drive chassis;
-
+// extern motor_group intakes;
 void default_constants();
 
 void drive_test();
@@ -15,3 +15,4 @@ void odom_test();
 void tank_odom_test();
 void holonomic_odom_test();
 void test_auton();
+void right();

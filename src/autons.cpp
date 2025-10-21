@@ -8,7 +8,7 @@
  * exit conditions, check the docs.
  */
 
- motor_group intakes = new motor_group(bottomIntake, );
+//  motor_group intakes = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
 void default_constants(){
   // Each constant set is in the form of (maxVoltage, kP, kI, kD, startI).
   chassis.set_drive_constants(10, 1, 0, 10, 0);
@@ -39,9 +39,9 @@ void odom_constants(){
   chassis.drive_min_voltage = 0;
 }
 
-/**
- * The expected behavior is to return to the start position.
- */
+// /**
+//  * The expected behavior is to return to the start position.
+//  */
 
 void drive_test(){
   chassis.drive_distance(24);
@@ -133,13 +133,44 @@ void holonomic_odom_test(){
 }
 
 void test_auton() {
+  odom_constants();
   chassis.set_heading(0);
 
 }
-
+//all intakes fwd
 void right() {
   chassis.set_heading(0);
-  intakes.spin_for();
+  bottomIntake.spin(forward);
+  lowerMiddleIntake.spin(forward);
+  upperMiddleIntake.spin(forward);
   chassis.drive_distance(36);
-  chassis.
+  wait(1, sec);
+  bottomIntake.stop(coast);
+  lowerMiddleIntake.stop(coast);
+  upperMiddleIntake.stop(coast);
+  chassis.turn_to_angle(128);
+  chassis.drive_distance(-2);
+  bottomIntake.spin(forward);
+  lowerMiddleIntake.spin(forward);
+  upperMiddleIntake.spin(forward);
+  topIntake.spin(reverse);
+  wait(500, msec);
+  bottomIntake.stop(coast);
+  lowerMiddleIntake.stop(coast);
+  upperMiddleIntake.stop(coast);
+  topIntake.stop(coast);
+  chassis.drive_distance(43.3);
+  chassis.turn_to_angle(180);
+  scraper.set(true);
+  for (int i = 0; i < 5; i++) {
+    chassis.drive_distance(1);
+    wait(1, msec);
+    chassis.drive_distance(-1);
+  }
+  chassis.drive_distance(20);
+  bottomIntake.spin(forward);
+  lowerMiddleIntake.spin(forward);
+  upperMiddleIntake.spin(forward);
+  topIntake.spin(reverse);
 }
+// minecraft golf club?

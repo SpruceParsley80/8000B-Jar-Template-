@@ -209,7 +209,7 @@ void usercontrol(void) {
     bottomIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     lowerMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     upperMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
-    topIntake.spin(directionType::fwd, R2L2Speed, vex::velocityUnits::pct);
+    topIntake.spin(directionType::rev, R2L2Speed, vex::velocityUnits::pct);
     
     chassis.control_arcade();
     wait(20, msec); // Sleep the task for a short amount of time to

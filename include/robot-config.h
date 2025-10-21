@@ -14,6 +14,7 @@ extern motor bottomIntake;
 extern motor lowerMiddleIntake;
 extern motor upperMiddleIntake;
 extern motor topIntake;
+// extern motor_group intakes;
 
 extern digital_out scraper;
 // extern digital_out descore; 

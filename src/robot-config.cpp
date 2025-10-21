@@ -18,7 +18,7 @@ motor bottomIntake = motor(PORT1, ratio6_1, true);
 motor lowerMiddleIntake = motor(PORT10, ratio6_1, true);
 motor upperMiddleIntake = motor(PORT9, ratio6_1, true);
 motor topIntake = motor(PORT21, ratio6_1, true);
-motor_group intakes = new motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
+// motor_group intakess = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
 
 digital_out scraper = digital_out(Brain.ThreeWirePort.H);  //not put
 
