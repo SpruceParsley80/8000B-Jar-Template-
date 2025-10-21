@@ -8,6 +8,7 @@
  * exit conditions, check the docs.
  */
 
+ motor_group intakes = new motor_group(bottomIntake, );
 void default_constants(){
   // Each constant set is in the form of (maxVoltage, kP, kI, kD, startI).
   chassis.set_drive_constants(10, 1, 0, 10, 0);
@@ -134,4 +135,11 @@ void holonomic_odom_test(){
 void test_auton() {
   chassis.set_heading(0);
 
+}
+
+void right() {
+  chassis.set_heading(0);
+  intakes.spin_for();
+  chassis.drive_distance(36);
+  chassis.
 }

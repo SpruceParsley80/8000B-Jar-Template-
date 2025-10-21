@@ -54,6 +54,7 @@ motor_group(frontRight, middleRight, upsideDownRight),
 //Specify the PORT NUMBER of your inertial sensor, in PORT format (i.e. "PORT1", not simply "1"):
 PORT12,
 
+
 //Input your wheel diameter. (4" omnis are actually closer to 4.125"):
 3.25,
 
@@ -209,7 +210,7 @@ void usercontrol(void) {
     lowerMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     upperMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     topIntake.spin(directionType::fwd, R2L2Speed, vex::velocityUnits::pct);
-
+    
     chassis.control_arcade();
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.
