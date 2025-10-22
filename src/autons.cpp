@@ -1,14 +1,65 @@
 #include "vex.h"
 
 /**
- * Resets the constants for auton movement.
- * Modify these to change the default behavior of functions like
- * drive_distance(). For explanations of the difference between
- * drive, heading, turning, and swinging, as well as the PID and
- * exit conditions, check the docs.
- */
+* Resets the constants for auton movement.
+* Modify these to change the default behavior of functions like
+* drive_distance(). For explanations of the difference between
+* drive, heading, turning, and swinging, as well as the PID and
+* exit conditions, check the docs.
+*/
 
 //  motor_group intakes = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
+
+//for straight starting position :)
+void right_side() {
+  chassis.drive_max_voltage = 6;
+  chassis.turn_max_voltage = 6;
+  chassis.set_heading(0);
+  chassis.turn_to_angle(7);
+  intake();
+  wait(15, msec);
+  chassis.drive_distance(16);
+  chassis.drive_distance(0);
+  chassis.turn_to_angle(7);
+  chassis.drive_distance(5);
+  chassis.drive_distance(0);
+  wait(0.2, sec);
+  bottomIntake.stop(brake);
+  lowerMiddleIntake.stop(brake);
+  upperMiddleIntake.stop(brake);
+  chassis.turn_to_angle(145);
+  wait(15, msec);
+  chassis.drive_distance(-17);
+  chassis.drive_distance(0);
+  wait(15, msec);
+  intake();
+  scoreHigh();
+  wait(500, msec);
+  bottomIntake.stop(coast);
+  lowerMiddleIntake.stop(coast);
+  upperMiddleIntake.stop(coast);
+  topIntake.stop(coast);
+  // chassis.drive_distance(43.3);
+  // wait(15, msec);
+  // chassis.turn_to_angle(180);
+  // wait(15, msec);
+  // scraper.set(true);
+  // wait(15, msec);
+  // for (int i = 0; i < 5; i++) {
+  //   chassis.drive_distance(1);
+  //   wait(15, msec);
+  //   chassis.drive_distance(-1);
+  //   wait(15, msec);
+  // }
+  // chassis.drive_distance(20);
+  // wait(15, msec);
+  // bottomIntake.spin(forward);
+  // lowerMiddleIntake.spin(forward);
+  // upperMiddleIntake.spin(forward);
+  // topIntake.spin(reverse);
+  Controller.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
+  wait(15, msec);
+}
 void default_constants(){
   // Each constant set is in the form of (maxVoltage, kP, kI, kD, startI).
   chassis.set_drive_constants(10, 1, 0, 10, 0);
@@ -43,11 +94,71 @@ void odom_constants(){
 //  * The expected behavior is to return to the start position.
 //  */
 
+void intake() {
+  bottomIntake.spinFor(reverse, 10000, deg, 480, rpm, false); //use spinFor henceforth
+  lowerMiddleIntake.spinFor(reverse, 10000, deg, 480, rpm, false);
+  upperMiddleIntake.spinFor(reverse, 10000, deg, 480, rpm, false);
+ }
+
+ void outtake() {
+  bottomIntake.spinFor(reverse, 1000, deg, 480, rpm, false); //use spinFor henceforth
+  lowerMiddleIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+  upperMiddleIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+ }
+ void scoreHigh() {
+  topIntake.spinFor(forward, 1000, deg, 480, rpm, false);
+ }
+ void scoreMid() {
+  topIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+ }
+
 void drive_test(){
-  chassis.drive_distance(24);
+  // chassis.drive_distance(24);
   // chassis.drive_distance(12);
   // chassis.drive_distance(18);
   // chassis.drive_distance(-36);
+  chassis.turn_to_angle(5);
+  intake();
+  chassis.set_heading(0);
+  wait(15, msec);
+  chassis.drive_distance(24);
+  wait(1, sec);
+  bottomIntake.stop(coast);
+  lowerMiddleIntake.stop(coast);
+  upperMiddleIntake.stop(coast);
+  // chassis.turn_to_angle(128);
+  // wait(15, msec);
+  // chassis.drive_distance(-2);
+  // wait(15, msec);
+  // bottomIntake.spin(forward);
+  // lowerMiddleIntake.spin(forward);
+  // upperMiddleIntake.spin(forward);
+  // topIntake.spin(reverse);
+  // wait(15, msec);
+  // bottomIntake.stop(coast);
+  // lowerMiddleIntake.stop(coast);
+  // upperMiddleIntake.stop(coast);
+  // topIntake.stop(coast);
+  // chassis.drive_distance(43.3);
+  // wait(15, msec);
+  // chassis.turn_to_angle(180);
+  // wait(15, msec);
+  // scraper.set(true);
+  // wait(15, msec);
+  // for (int i = 0; i < 5; i++) {
+  //   chassis.drive_distance(1);
+  //   wait(15, msec);
+  //   chassis.drive_distance(-1);
+  //   wait(15, msec);
+  // }
+  // chassis.drive_distance(20);
+  // wait(15, msec);
+  // bottomIntake.spin(forward);
+  // lowerMiddleIntake.spin(forward);
+  // upperMiddleIntake.spin(forward);
+  // topIntake.spin(reverse);
+  Brain.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
+  wait(15, msec);
 }
 
 /**
@@ -138,39 +249,4 @@ void test_auton() {
 
 }
 //all intakes fwd
-void right() {
-  chassis.set_heading(0);
-  bottomIntake.spin(forward);
-  lowerMiddleIntake.spin(forward);
-  upperMiddleIntake.spin(forward);
-  chassis.drive_distance(36);
-  wait(1, sec);
-  bottomIntake.stop(coast);
-  lowerMiddleIntake.stop(coast);
-  upperMiddleIntake.stop(coast);
-  chassis.turn_to_angle(128);
-  chassis.drive_distance(-2);
-  bottomIntake.spin(forward);
-  lowerMiddleIntake.spin(forward);
-  upperMiddleIntake.spin(forward);
-  topIntake.spin(reverse);
-  wait(500, msec);
-  bottomIntake.stop(coast);
-  lowerMiddleIntake.stop(coast);
-  upperMiddleIntake.stop(coast);
-  topIntake.stop(coast);
-  chassis.drive_distance(43.3);
-  chassis.turn_to_angle(180);
-  scraper.set(true);
-  for (int i = 0; i < 5; i++) {
-    chassis.drive_distance(1);
-    wait(1, msec);
-    chassis.drive_distance(-1);
-  }
-  chassis.drive_distance(20);
-  bottomIntake.spin(forward);
-  lowerMiddleIntake.spin(forward);
-  upperMiddleIntake.spin(forward);
-  topIntake.spin(reverse);
-}
 // minecraft golf club?

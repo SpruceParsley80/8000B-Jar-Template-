@@ -174,11 +174,77 @@ void pre_auton() {
  * drive_test(), for example, with your own auton function you created in
  * autons.cpp and declared in autons.h.
  */
+//  void intake() {
+//   bottomIntake.spinFor(forward, 1000, deg, 480, rpm, false); //use spinFor henceforth
+//   lowerMiddleIntake.spinFor(forward, 1000, deg, 480, rpm, false);
+//   upperMiddleIntake.spinFor(forward, 1000, deg, 480, rpm, false);
+//  }
+
+//  void outtake() {
+//   bottomIntake.spinFor(reverse, 1000, deg, 480, rpm, false); //use spinFor henceforth
+//   lowerMiddleIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+//   upperMiddleIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+//  }
+//  void scoreHigh() {
+//   topIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+//  }
+//  void scoreMid() {
+//   topIntake.spinFor(forward, 1000, deg, 480, rpm, false);
+//  }
 
 void autonomous(void) {
   auto_started = true;
-  drive_test();
+  // drive_test();
   // turn_test();
+  // chassis.drive_distance(24);
+  // chassis.drive_distance(12);
+  // chassis.drive_distance(18);
+  // chassis.drive_distance(-36);
+  right_side();
+
+  // intake();
+  // chassis.set_heading(0);
+  // wait(15, msec);
+  // chassis.drive_distance(24);
+  // wait(1, sec);
+  // bottomIntake.stop(coast);
+  // lowerMiddleIntake.stop(coast);
+  // upperMiddleIntake.stop(coast);
+
+  // chassis.turn_to_angle(128);
+  // wait(15, msec);
+  // chassis.drive_distance(-2);
+  // wait(15, msec);
+  // bottomIntake.spin(forward);
+  // lowerMiddleIntake.spin(forward);
+  // upperMiddleIntake.spin(forward);
+  // topIntake.spin(reverse);
+  // wait(15, msec);
+  // bottomIntake.stop(coast);
+  // lowerMiddleIntake.stop(coast);
+  // upperMiddleIntake.stop(coast);
+  // topIntake.stop(coast);
+  // chassis.drive_distance(43.3);
+  // wait(15, msec);
+  // chassis.turn_to_angle(180);
+  // wait(15, msec);
+  // scraper.set(true);
+  // wait(15, msec);
+  // for (int i = 0; i < 5; i++) {
+  //   chassis.drive_distance(1);
+  //   wait(15, msec);
+  //   chassis.drive_distance(-1);
+  //   wait(15, msec);
+  // }
+  // chassis.drive_distance(20);
+  // wait(15, msec);
+  // bottomIntake.spin(forward);
+  // lowerMiddleIntake.spin(forward);
+  // upperMiddleIntake.spin(forward);
+  // topIntake.spin(reverse);
+  Brain.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
+  wait(15, msec);
+  
 }
 
 /*---------------------------------------------------------------------------*/
@@ -195,6 +261,7 @@ void usercontrol(void) {
   // User control code here, inside the loop
   scraper = true; 
   bool buttonA = true; 
+  bool buttonB = false;
   while (1) {
     int R1L1Speed = (Controller.ButtonL1.pressing() * (-1) + Controller.ButtonR1.pressing()) * 127; 
     int R2L2Speed = (Controller.ButtonL2.pressing() * (-1) + Controller.ButtonR2.pressing()) * 127; 
@@ -205,6 +272,12 @@ void usercontrol(void) {
       }
     } else{
       buttonA = true; 
+    }
+    if (Controller.ButtonB.pressing()) {
+      if(buttonB){
+          R1L1Speed *= 0;
+        buttonB = !buttonB; 
+      }
     }
     bottomIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     lowerMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
