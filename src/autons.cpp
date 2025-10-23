@@ -12,39 +12,52 @@
 
 //for straight starting position :)
 void right_side() {
+  chassis.turn_timeout = 100;
+  chassis.drive_timeout = 100;
   chassis.drive_max_voltage = 6;
   chassis.turn_max_voltage = 6;
   chassis.set_heading(0);
   chassis.turn_to_angle(7);
-  intake();
-  wait(15, msec);
+  intake(480);
+  wait(5, msec);
   chassis.drive_distance(16);
   chassis.drive_distance(0);
   chassis.turn_to_angle(7);
-  chassis.drive_distance(5);
+  chassis.drive_distance(6.7);
   chassis.drive_distance(0);
-  wait(0.2, sec);
+  wait(5, msec);
   bottomIntake.stop(brake);
   lowerMiddleIntake.stop(brake);
   upperMiddleIntake.stop(brake);
-  chassis.turn_to_angle(145);
-  wait(15, msec);
+  chassis.turn_to_angle(135);
+  wait(5, msec);
   chassis.drive_distance(-17);
   chassis.drive_distance(0);
-  wait(15, msec);
-  intake();
-  scoreHigh();
-  wait(500, msec);
+  wait(5, msec);
+  scoreHigh(520);
+  // wait(1350, msec);
+  // topIntake.stop(coast);
+  intake(520);
+  // scoreMid(520);
+  wait(1650, msec);
   bottomIntake.stop(coast);
   lowerMiddleIntake.stop(coast);
   upperMiddleIntake.stop(coast);
   topIntake.stop(coast);
-  // chassis.drive_distance(43.3);
-  // wait(15, msec);
-  // chassis.turn_to_angle(180);
-  // wait(15, msec);
-  // scraper.set(true);
-  // wait(15, msec);
+  chassis.drive_max_voltage = 12;
+  chassis.drive_distance(44);
+  wait(5, msec);
+  chassis.drive_max_voltage = 10;
+  chassis.turn_to_angle(180);
+  wait(5, msec);
+  scraper.set(true);
+  wait(5, msec);
+  intake(540);
+  chassis.drive_distance(12);
+  chassis.drive_distance(0);
+  wait(5, msec);
+  chassis.drive_distance(-20);
+  scoreHigh(540);
   // for (int i = 0; i < 5; i++) {
   //   chassis.drive_distance(1);
   //   wait(15, msec);
@@ -93,23 +106,23 @@ void odom_constants(){
 // /**
 //  * The expected behavior is to return to the start position.
 //  */
-
-void intake() {
-  bottomIntake.spinFor(reverse, 10000, deg, 480, rpm, false); //use spinFor henceforth
-  lowerMiddleIntake.spinFor(reverse, 10000, deg, 480, rpm, false);
-  upperMiddleIntake.spinFor(reverse, 10000, deg, 480, rpm, false);
+//DEFAULT SPEEDS ARE 480
+void intake(int speed) {
+  bottomIntake.spinFor(reverse, 10000, deg, speed, rpm, false); //use spinFor henceforth
+  lowerMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
+  upperMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
  }
 
- void outtake() {
-  bottomIntake.spinFor(reverse, 1000, deg, 480, rpm, false); //use spinFor henceforth
-  lowerMiddleIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
-  upperMiddleIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+ void outtake(int speed) { // 480 is default
+  bottomIntake.spinFor(reverse, 1000, deg, speed, rpm, false); //use spinFor henceforth
+  lowerMiddleIntake.spinFor(reverse, 1000, deg, speed, rpm, false);
+  upperMiddleIntake.spinFor(reverse, 1000, deg, speed, rpm, false);
  }
- void scoreHigh() {
-  topIntake.spinFor(forward, 1000, deg, 480, rpm, false);
+ void scoreHigh(int speed) {
+  topIntake.spinFor(forward, 1000, deg, speed, rpm, false);
  }
- void scoreMid() {
-  topIntake.spinFor(reverse, 1000, deg, 480, rpm, false);
+ void scoreMid(int speed) {
+  topIntake.spinFor(forward, -1000, deg, speed, rpm, false);
  }
 
 void drive_test(){
@@ -118,7 +131,7 @@ void drive_test(){
   // chassis.drive_distance(18);
   // chassis.drive_distance(-36);
   chassis.turn_to_angle(5);
-  intake();
+  // intake();
   chassis.set_heading(0);
   wait(15, msec);
   chassis.drive_distance(24);

@@ -11,10 +11,10 @@ void default_constants();
 void right_side();
 
 //helper functions
-void intake();
-void outtake();
-void scoreHigh();
-void scoreMid();
+void intake(int);
+void outtake(int);
+void scoreHigh(int);
+void scoreMid(int);
 
 //test autons
 void drive_test();
