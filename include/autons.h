@@ -9,6 +9,7 @@ void default_constants();
 
 //actual game autons
 void right_side();
+void left_side();
 
 //helper functions
 void intake(int);

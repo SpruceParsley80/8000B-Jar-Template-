@@ -12,8 +12,8 @@
 
 //for straight starting position :)
 void right_side() {
-  chassis.turn_timeout = 100;
-  chassis.drive_timeout = 100;
+  chassis.turn_timeout = 1000;
+  chassis.drive_timeout = 1500;
   chassis.drive_max_voltage = 6;
   chassis.turn_max_voltage = 6;
   chassis.set_heading(0);
@@ -34,42 +34,93 @@ void right_side() {
   chassis.drive_distance(-17);
   chassis.drive_distance(0);
   wait(5, msec);
-  scoreHigh(520);
+  outtake(200);
+  wait(10, msec);
+  intake(150);
+  scoreHigh(200);
   // wait(1350, msec);
   // topIntake.stop(coast);
-  intake(520);
   // scoreMid(520);
-  wait(1650, msec);
+  wait(1000, msec);
   bottomIntake.stop(coast);
   lowerMiddleIntake.stop(coast);
   upperMiddleIntake.stop(coast);
   topIntake.stop(coast);
   chassis.drive_max_voltage = 12;
-  chassis.drive_distance(44);
+  chassis.drive_distance(46);
   wait(5, msec);
   chassis.drive_max_voltage = 10;
   chassis.turn_to_angle(180);
   wait(5, msec);
   scraper.set(true);
-  wait(5, msec);
-  intake(540);
-  chassis.drive_distance(12);
+  wait(230, msec);
+  intake(200);
+  chassis.drive_distance(20);
   chassis.drive_distance(0);
   wait(5, msec);
-  chassis.drive_distance(-20);
-  scoreHigh(540);
-  // for (int i = 0; i < 5; i++) {
-  //   chassis.drive_distance(1);
-  //   wait(15, msec);
-  //   chassis.drive_distance(-1);
-  //   wait(15, msec);
-  // }
-  // chassis.drive_distance(20);
-  // wait(15, msec);
-  // bottomIntake.spin(forward);
-  // lowerMiddleIntake.spin(forward);
-  // upperMiddleIntake.spin(forward);
-  // topIntake.spin(reverse);
+  chassis.drive_distance(-4);
+  chassis.drive_distance(0);
+  wait(5, msec);
+  chassis.drive_distance(-30);
+  scoreHigh(200);
+  // 
+  Controller.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
+  wait(15, msec);
+}
+void left_side() {
+  chassis.turn_timeout = 1000;
+  chassis.drive_timeout = 1500;
+  chassis.drive_max_voltage = 6;
+  chassis.turn_max_voltage = 6;
+  chassis.set_heading(0);
+  chassis.turn_to_angle(-7);
+  intake(480);
+  wait(5, msec);
+  chassis.drive_distance(16);
+  chassis.drive_distance(0);
+  chassis.turn_to_angle(-7);
+  chassis.drive_distance(6.7);
+  chassis.drive_distance(0);
+  wait(5, msec);
+  bottomIntake.stop(brake);
+  lowerMiddleIntake.stop(brake);
+  upperMiddleIntake.stop(brake);
+  //this part gets changed
+  chassis.turn_to_angle(42.5);
+  wait(5, msec);
+  chassis.drive_distance(8.5);
+  chassis.drive_distance(0);
+  wait(5, msec);
+  outtake(200);
+  scoreMid(200);
+  wait(350, msec);
+  topIntake.stop(coast);
+  // // scoreMid(520);
+  wait(750, msec);
+  bottomIntake.stop(coast);
+  lowerMiddleIntake.stop(coast);
+  upperMiddleIntake.stop(coast);
+  chassis.turn_max_voltage = 12;
+  chassis.turn_to_angle(45);
+  // topIntake.stop(coast);
+  chassis.drive_max_voltage = 12;
+  chassis.drive_distance(-39);
+  wait(5, msec);
+  chassis.drive_max_voltage = 10;
+  chassis.turn_to_angle(180);
+  wait(5, msec);
+  scraper.set(true);
+  wait(230, msec);
+  intake(200);
+  chassis.drive_distance(20);
+  chassis.drive_distance(0);
+  wait(5, msec);
+  chassis.drive_distance(-4);
+  chassis.drive_distance(0);
+  wait(5, msec);
+  chassis.drive_distance(-30);
+  scoreHigh(200);
+  // 
   Controller.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
   wait(15, msec);
 }
@@ -114,15 +165,15 @@ void intake(int speed) {
  }
 
  void outtake(int speed) { // 480 is default
-  bottomIntake.spinFor(reverse, 1000, deg, speed, rpm, false); //use spinFor henceforth
-  lowerMiddleIntake.spinFor(reverse, 1000, deg, speed, rpm, false);
-  upperMiddleIntake.spinFor(reverse, 1000, deg, speed, rpm, false);
+  bottomIntake.spinFor(reverse, -10000, deg, speed, rpm, false); //use spinFor henceforth
+  lowerMiddleIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
+  upperMiddleIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
  }
  void scoreHigh(int speed) {
-  topIntake.spinFor(forward, 1000, deg, speed, rpm, false);
+  topIntake.spinFor(forward, 10000, deg, speed, rpm, false);
  }
  void scoreMid(int speed) {
-  topIntake.spinFor(forward, -1000, deg, speed, rpm, false);
+  topIntake.spinFor(forward, -10000, deg, speed, rpm, false);
  }
 
 void drive_test(){

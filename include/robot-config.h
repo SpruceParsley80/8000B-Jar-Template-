@@ -6,6 +6,9 @@ extern motor frontLeft;
 extern motor middleLeft;
 extern motor upsideDownLeft;
 
+
+
+extern inertial inert;
 extern motor frontRight; 
 extern motor middleRight;
 extern motor upsideDownRight;

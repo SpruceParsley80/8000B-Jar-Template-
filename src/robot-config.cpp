@@ -25,7 +25,9 @@ digital_out scraper = digital_out(Brain.ThreeWirePort.H);  //not put
 // digital_out descore = digital_out(Brain.ThreeWirePort.A); // Not put 
 
 controller Controller; 
+inertial inert(PORT12);
 
 void vexcodeInit( void ) {
   // nothing to initialize
+  inert.calibrate();
 }

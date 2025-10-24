@@ -194,54 +194,8 @@ void pre_auton() {
 
 void autonomous(void) {
   auto_started = true;
-  // drive_test();
-  // turn_test();
-  // chassis.drive_distance(24);
-  // chassis.drive_distance(12);
-  // chassis.drive_distance(18);
-  // chassis.drive_distance(-36);
-  right_side();
-
-  // intake();
-  // chassis.set_heading(0);
-  // wait(15, msec);
-  // chassis.drive_distance(24);
-  // wait(1, sec);
-  // bottomIntake.stop(coast);
-  // lowerMiddleIntake.stop(coast);
-  // upperMiddleIntake.stop(coast);
-
-  // chassis.turn_to_angle(128);
-  // wait(15, msec);
-  // chassis.drive_distance(-2);
-  // wait(15, msec);
-  // bottomIntake.spin(forward);
-  // lowerMiddleIntake.spin(forward);
-  // upperMiddleIntake.spin(forward);
-  // topIntake.spin(reverse);
-  // wait(15, msec);
-  // bottomIntake.stop(coast);
-  // lowerMiddleIntake.stop(coast);
-  // upperMiddleIntake.stop(coast);
-  // topIntake.stop(coast);
-  // chassis.drive_distance(43.3);
-  // wait(15, msec);
-  // chassis.turn_to_angle(180);
-  // wait(15, msec);
-  // scraper.set(true);
-  // wait(15, msec);
-  // for (int i = 0; i < 5; i++) {
-  //   chassis.drive_distance(1);
-  //   wait(15, msec);
-  //   chassis.drive_distance(-1);
-  //   wait(15, msec);
-  // }
-  // chassis.drive_distance(20);
-  // wait(15, msec);
-  // bottomIntake.spin(forward);
-  // lowerMiddleIntake.spin(forward);
-  // upperMiddleIntake.spin(forward);
-  // topIntake.spin(reverse);
+  // right_side();
+  left_side();
   Brain.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
   wait(15, msec);
   
@@ -299,6 +253,7 @@ int main() {
   Competition.drivercontrol(usercontrol);
 
   // Run the pre-autonomous function.
+  inert.calibrate();
   pre_auton();
 
   // Prevent main from exiting with an infinite loop.
