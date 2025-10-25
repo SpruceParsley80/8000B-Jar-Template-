@@ -110,7 +110,7 @@ PORT3,     -PORT4,
 
 int current_auton_selection = 0;
 bool auto_started = false;
-bool scraping = false;
+bool scraping = true;
 
 /**
  * Function before autonomous. It prints the current auton number on the screen
@@ -194,8 +194,10 @@ void pre_auton() {
 
 void autonomous(void) {
   auto_started = true;
-  // right_side();
-  left_side();
+  //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 1 V
+  // left_side();
+  //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 2 V
+  right_side();
   Brain.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
   wait(15, msec);
   

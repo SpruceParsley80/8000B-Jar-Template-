@@ -16,6 +16,7 @@ void intake(int);
 void outtake(int);
 void scoreHigh(int);
 void scoreMid(int);
+void intakeForScoring(int);
 
 //test autons
 void drive_test();
