@@ -194,10 +194,10 @@ void pre_auton() {
 
 void autonomous(void) {
   auto_started = true;
-  //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 1 V
-  // left_side();
   //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 2 V
-  right_side();
+  // right_side();
+  //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 1 V
+  left_side();
   Brain.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
   wait(15, msec);
   

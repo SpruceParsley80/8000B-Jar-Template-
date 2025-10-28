@@ -11,9 +11,13 @@
 //  motor_group intakes = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
 
 //for straight starting position :)
+void right_odom() {
+//norhing
+
+}
 void right_side() {
   chassis.turn_timeout = 1000;
-  chassis.drive_timeout = 1500;
+  chassis.drive_timeout = 2000;
   chassis.drive_max_voltage = 6;
   chassis.turn_max_voltage = 6;
   chassis.set_heading(0);
@@ -80,42 +84,41 @@ void left_side() {
   chassis.drive_max_voltage = 6;
   chassis.turn_max_voltage = 6;
   chassis.set_heading(0);
-  wait(200, msec);
+  wait(5, msec);
   chassis.turn_to_angle(-7);
-  intake(480);
+  jonathanSpecialMarkOne(480);
   chassis.drive_distance(19);
   // chassis.drive_distance(0);
   chassis.turn_to_angle(-7);
   chassis.drive_distance(5.2);
-  chassis.drive_distance(0);
   wait(5, msec);
   bottomIntake.stop(brake);
   lowerMiddleIntake.stop(brake);
   upperMiddleIntake.stop(brake);
   //this part gets changed
   chassis.turn_to_angle(-135);
-  wait(5, msec);
+  wait(5, msec);  
   chassis.drive_distance(-17);
-  chassis.drive_distance(0);
+  // chassis.drive_distance(0);
   wait(5, msec);
   outtake(200);
-  wait(10, msec);
-  intake(150);
+  wait(1, msec);
+  intakeForScoring(200);
   scoreHigh(200);
   // wait(1350, msec);
   // topIntake.stop(coast);
   // scoreMid(520);
-  wait(1000, msec);
+  wait(1650, msec);
   bottomIntake.stop(coast);
   lowerMiddleIntake.stop(coast);
   upperMiddleIntake.stop(coast);
   topIntake.stop(coast);
-  chassis.turn_max_voltage = 12;
+  // chassis.turn_max_voltage = 12;
   // chassis.turn_to_angle(45);
   // topIntake.stop(coast);
   chassis.drive_max_voltage = 9;
-  scoreHigh(200);
-  outtake(40);
+  scoreHigh(20);
+  outtake(20);
   
   chassis.drive_distance(44);
   topIntake.stop(coast);
@@ -123,14 +126,15 @@ void left_side() {
   bottomIntake.stop(coast);
   lowerMiddleIntake.stop(coast);
   upperMiddleIntake.stop(coast);
-  chassis.drive_max_voltage = 7;
+  chassis.drive_max_voltage = 5;
+  chassis.drive_distance(0);
   chassis.turn_to_angle(180);
   wait(5, msec);
   scraper.set(true);
   wait(200, msec);
-  intake(200);
+  jonathanSpecialMarkOne(200);
   scoreHigh(25);
-  chassis.drive_distance(15);
+  chassis.drive_distance(13);
   // chassis.drive_max_voltage = 12;
   // chassis.drive_timeout = 100;
   // chassis.drive_distance(-5);
@@ -138,15 +142,18 @@ void left_side() {
   // chassis.drive_distance(5);
   // chassis.drive_distance(0);
   chassis.drive_timeout = 1250;
-  chassis.drive_max_voltage = 8;
+  chassis.drive_max_voltage = 12;
   // wait(2, msec);
   chassis.drive_distance(-5);
   wait(2, msec);
   chassis.turn_to_angle(180);
-  outtake(30);
+  // outtake(30);
+  upperUnclogger(200);
   chassis.drive_distance(-30);
-  // bottomIntake.stop(coast);
-  wait(510, msec);
+  topIntake.stop(coast);
+  upperMiddleIntake.stop(coast);
+  lowerMiddleIntake.stop(coast);
+  wait(210, msec);
   intakeForScoring(200);
   scoreHigh(200);
   // 
@@ -196,6 +203,16 @@ void intake(int speed) {
   // bottomIntake.spinFor(reverse, 10000, deg, speed, rpm, false); //use spinFor henceforth
   lowerMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
   upperMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
+ }
+ void jonathanSpecialMarkOne(int speed) { // intakes but only with the bottom 2 intakes and doesnt score
+  bottomIntake.spinFor(reverse, 10000, deg, speed, rpm, false); //use spinFor henceforth
+  lowerMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
+  // upperMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
+ }
+ void upperUnclogger(int speed) {
+  topIntake.spinFor(reverse, -10000, deg, speed, rpm, false); //use spinFor henceforth
+  upperMiddleIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
+  lowerMiddleIntake.spinFor(reverse, 10000, deg, speed / 2, rpm, false);
  }
 
  void outtake(int speed) { // 480 is default

@@ -8,6 +8,8 @@ extern Drive chassis;
 void default_constants();
 
 //actual game autons
+void right_odom();
+void left_odom();
 void right_side();
 void left_side();
 
@@ -17,6 +19,8 @@ void outtake(int);
 void scoreHigh(int);
 void scoreMid(int);
 void intakeForScoring(int);
+void jonathanSpecialMarkOne(int);
+void upperUnclogger(int);
 
 //test autons
 void drive_test();
