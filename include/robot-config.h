@@ -20,6 +20,7 @@ extern motor topIntake;
 // extern motor_group intakes;
 
 extern digital_out scraper;
+extern digital_out descore;
 // extern digital_out descore; 
 
 extern controller Controller; 

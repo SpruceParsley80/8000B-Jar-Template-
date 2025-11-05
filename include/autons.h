@@ -5,8 +5,9 @@ class Drive;
 
 extern Drive chassis;
 // extern motor_group intakes;
+//constants
 void default_constants();
-
+void odom_constants();
 //actual game autons
 void right_odom();
 void left_odom();

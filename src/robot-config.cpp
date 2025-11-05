@@ -8,24 +8,26 @@ brain  Brain;
 
 motor frontLeft = motor(PORT13, ratio6_1, true); 
 motor middleLeft = motor(PORT17, ratio6_1, true);
-motor upsideDownLeft = motor(PORT20, ratio6_1, false);
+motor upsideDownLeft = motor(PORT18, ratio6_1, false);
+
 
 motor frontRight = motor(PORT11, ratio6_1, false); 
-motor middleRight = motor(PORT18, ratio6_1, false);
-motor upsideDownRight = motor(PORT19, ratio6_1, true);
+motor middleRight = motor(PORT19, ratio6_1, false);
+motor upsideDownRight = motor(PORT15, ratio6_1, true);
 
 motor bottomIntake = motor(PORT1, ratio6_1, true);
-motor lowerMiddleIntake = motor(PORT10, ratio6_1, true);
-motor upperMiddleIntake = motor(PORT9, ratio6_1, true);
-motor topIntake = motor(PORT21, ratio6_1, true);
+motor lowerMiddleIntake = motor(PORT9, ratio6_1, true);
+motor upperMiddleIntake = motor(PORT20, ratio6_1, true);
+motor topIntake = motor(PORT8, ratio6_1, true);
 // motor_group intakess = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
 
-digital_out scraper = digital_out(Brain.ThreeWirePort.H);  //not put
+digital_out scraper = digital_out(Brain.ThreeWirePort.H);  
+digital_out descore = digital_out(Brain.ThreeWirePort.G);  
 
 // digital_out descore = digital_out(Brain.ThreeWirePort.A); // Not put 
 
 controller Controller; 
-inertial inert(PORT12);
+inertial inert(PORT12); 
 
 void vexcodeInit( void ) {
   // nothing to initialize
