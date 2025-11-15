@@ -10,7 +10,6 @@ motor frontLeft = motor(PORT13, ratio6_1, true);
 motor middleLeft = motor(PORT17, ratio6_1, true);
 motor upsideDownLeft = motor(PORT18, ratio6_1, false);
 
-
 motor frontRight = motor(PORT11, ratio6_1, false); 
 motor middleRight = motor(PORT19, ratio6_1, false);
 motor upsideDownRight = motor(PORT15, ratio6_1, true);
@@ -19,6 +18,9 @@ motor bottomIntake = motor(PORT1, ratio6_1, true);
 motor lowerMiddleIntake = motor(PORT9, ratio6_1, true);
 motor upperMiddleIntake = motor(PORT20, ratio6_1, true);
 motor topIntake = motor(PORT8, ratio6_1, true);
+
+distance rightDist = distance(PORT1); //CHANGE - ITS NOT GOING TO BE THIS PORT
+distance frontDist = distance(PORT2); //CHANGE THIS ONE TOO
 // motor_group intakess = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
 
 digital_out scraper = digital_out(Brain.ThreeWirePort.H);  

@@ -12,11 +12,20 @@
  * @param ForwardTracker_center_distance A horizontal distance to the wheel center in inches.
  * @param SidewaysTracker_center_distance A vertical distance to the wheel center in inches.
  */
-
-void Odom::set_physical_distances(float ForwardTracker_center_distance, float SidewaysTracker_center_distance){
-  this->ForwardTracker_center_distance = ForwardTracker_center_distance;
-  this->SidewaysTracker_center_distance = SidewaysTracker_center_distance;
-}
+ 
+ void Odom::set_physical_distances(float ForwardTracker_center_distance, float SidewaysTracker_center_distance){
+   this->ForwardTracker_center_distance = ForwardTracker_center_distance;
+   this->SidewaysTracker_center_distance = SidewaysTracker_center_distance;
+  }
+  //is supposed to take the inputs from the distance sensors on the front and right
+  //it uses that and subtracts half of each dimension of the field from it, then 
+  //adds or subtracts the result based on if the wall is further or closer 
+  //lowkey i dont think we need odom
+  //i get that swing turns are cool but practically when are we using that
+  //and can we not just turn mid thingy 
+  void Odom::stupidThing() {
+    
+  }
 
 /**
  * Resets the position, including tracking wheels.

@@ -29,13 +29,13 @@ Drive chassis(
 
 //Pick your drive setup from the list below:
 //ZERO_TRACKER_NO_ODOM
-// ZERO_TRACKER_ODOM
+ZERO_TRACKER_ODOM
 //TANK_ONE_FORWARD_ENCODER
 //TANK_ONE_FORWARD_ROTATION
 //TANK_ONE_SIDEWAYS_ENCODER
 //TANK_ONE_SIDEWAYS_ROTATION
 //TANK_TWO_ENCODER
-TANK_TWO_ROTATION
+// TANK_TWO_ROTATION
 //HOLONOMIC_TWO_ENCODER
 //HOLONOMIC_TWO_ROTATION
 //
@@ -88,7 +88,7 @@ PORT3,     -PORT4,
 //If you are using position tracking, this is the Forward Tracker port (the tracker which runs parallel to the direction of the chassis).
 //If this is a rotation sensor, enter it in "PORT1" format, inputting the port below.
 //If this is an encoder, enter the port as an integer. Triport A will be a "1", Triport B will be a "2", etc.
-PORT17,
+PORT16,
 
 //Input the Forward Tracker diameter (reverse it to make the direction switch):
 2.75,
