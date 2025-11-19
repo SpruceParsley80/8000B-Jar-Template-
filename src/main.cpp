@@ -2,6 +2,7 @@
 
 using namespace vex;
 competition Competition;
+Odom odom;
 //big thanks to ben from my sister team for helping me change from pros to jar
 //i couldve done it myself probably but it would've been harder and we didnt have much time so
 
@@ -47,7 +48,7 @@ ZERO_TRACKER_ODOM
 //You will input whatever motor names you chose when you configured your robot using the sidebar configurer, they don't have to be "Motor1" and "Motor2".
 
 //Left Motors:
-motor_group(frontLeft,middleLeft, upsideDownLeft),
+motor_group(frontLeft, middleLeft, upsideDownLeft),
 
 //Right Motors:
 motor_group(frontRight, middleRight, upsideDownRight),
@@ -111,8 +112,19 @@ PORT21,
 
 int current_auton_selection = 0;
 bool auto_started = false;
-// bool scraping = false;
-// bool descoring = false;
+
+//important costants
+
+/*AI USE DISCLAIMER */
+//the next few lines of code were vibecoded but i didn't copy and paste anything 
+//so its marginally better than just copy and pasting wholecloth
+const float FORWARD_TRACKER_CENTER_DISTANCE = 0.0;
+const float SIDE_TRACKER_CENTER_DISTANCE = 0.0;
+const float TICKS_PER_REV = 360.0;
+const float WHEEL_DIAM = 3.25;
+//you wanted precision i'll give you precision
+const float PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679; 
+
 
 /**
  * Function before autonomous. It prints the current auton number on the screen
@@ -126,6 +138,8 @@ void pre_auton() {
   vexcodeInit();
   default_constants();
 
+  odom.set_physical_distances(FORWARD_TRACKER_CENTER_DISTANCE, SIDE_TRACKER_CENTER_DISTANCE);
+
   while(!auto_started){
     Brain.Screen.clearScreen();
     Brain.Screen.printAt(5, 20, "JAR Template v1.2.0");
@@ -133,39 +147,39 @@ void pre_auton() {
     Brain.Screen.printAt(5, 60, "%d", Brain.Battery.capacity());
     Brain.Screen.printAt(5, 80, "Chassis Heading Reading:");
     Brain.Screen.printAt(5, 100, "%f", chassis.get_absolute_heading());
-    Brain.Screen.printAt(5, 120, "Selected Auton:");
-    switch(current_auton_selection){
-      case 0:
-        Brain.Screen.printAt(5, 140, "Auton 1");
-        break;
-      case 1:
-        Brain.Screen.printAt(5, 140, "Auton 2");
-        break;
-      case 2:
-        Brain.Screen.printAt(5, 140, "Auton 3");
-        break;
-      case 3:
-        Brain.Screen.printAt(5, 140, "Auton 4");
-        break;
-      case 4:
-        Brain.Screen.printAt(5, 140, "Auton 5");
-        break;
-      case 5:
-        Brain.Screen.printAt(5, 140, "Auton 6");
-        break;
-      case 6:
-        Brain.Screen.printAt(5, 140, "Auton 7");
-        break;
-      case 7:
-        Brain.Screen.printAt(5, 140, "Auton 8");
-        break;
-    }
-    if(Brain.Screen.pressing()){
-      while(Brain.Screen.pressing()) {}
-      current_auton_selection ++;
-    } else if (current_auton_selection == 8){
-      current_auton_selection = 0;
-    }
+    Brain.Screen.printAt(5, 120, "what are we doing guys");
+    // switch(current_auton_selection){
+    //   case 0:
+    //     Brain.Screen.printAt(5, 140, "Auton 1");
+    //     break;
+    //   case 1:
+    //     Brain.Screen.printAt(5, 140, "Auton 2");
+    //     break;
+    //   case 2:
+    //     Brain.Screen.printAt(5, 140, "Auton 3");
+    //     break;
+    //   case 3:
+    //     Brain.Screen.printAt(5, 140, "Auton 4");
+    //     break;
+    //   case 4:
+    //     Brain.Screen.printAt(5, 140, "Auton 5");
+    //     break;
+    //   case 5:
+    //     Brain.Screen.printAt(5, 140, "Auton 6");
+    //     break;
+    //   case 6:
+    //     Brain.Screen.printAt(5, 140, "Auton 7");
+    //     break;
+    //   case 7:
+    //     Brain.Screen.printAt(5, 140, "Auton 8");
+    //     break;
+    // }
+    // if(Brain.Screen.pressing()){
+    //   while(Brain.Screen.pressing()) {}
+    //   current_auton_selection ++;
+    // } else if (current_auton_selection == 8){
+    //   current_auton_selection = 0;
+    // }
     task::sleep(10);
   }
 }

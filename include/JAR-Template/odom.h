@@ -20,4 +20,17 @@ public:
   void set_physical_distances(float ForwardTracker_center_distance, float SidewaysTracker_center_distance);
   float sampleY();
   float sampleX();
+  float odominator(float x, float y);
+  void actualOdominator(float targetX, float targetY);
+  struct particle{
+    float x; 
+    float y; 
+    float theta; 
+    float weight;
+  };
+  struct beam {
+    float angle; 
+    float distance;
+  };
+  struct delta {float dx; float dy; float dtheta;};
 };

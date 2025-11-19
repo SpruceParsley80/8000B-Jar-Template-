@@ -4,7 +4,8 @@ using namespace vex;
 using signature = vision::signature;
 using code = vision::code;
 
-brain  Brain;
+brain Brain;
+// Odom odom;
 
 motor frontLeft = motor(PORT13, ratio6_1, true); 
 motor middleLeft = motor(PORT17, ratio6_1, true);

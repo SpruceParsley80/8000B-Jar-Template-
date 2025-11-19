@@ -17,6 +17,8 @@
    this->ForwardTracker_center_distance = ForwardTracker_center_distance;
    this->SidewaysTracker_center_distance = SidewaysTracker_center_distance;
   }
+  float currentX = 0;
+  float currentY = 0;
   //yay (utility)
   float Odom::sampleY() {
     return (float) frontDist.objectDistance(inches);
@@ -24,6 +26,34 @@
   float Odom::sampleX() {
     return (float) rightDist.objectDistance(inches);
   }
+
+  // float Odom::odominator(float x, float y) {
+  //   chassis.turn_to_angle(0);
+  //   int currX = sampleX();
+  //   int curry = sampleY();
+  //   if (currY > y) {
+  //     chassis.drive_distance(0.1);
+  //   } else if (currY < y) {
+  //     chassis.drive_distance(-0.1);
+  //   }
+  //   if (currX < x) {
+  //     chassis.turn_to_angle(90);
+  //   }
+  //   return 0;
+  //   //osublimator
+  // }
+  
+
+  // float Odom::actualOdominator(float targetX, float targetY) {
+  //   chassis.turn_to_angle(0);
+  //   float crowFlyingDistance = hypotf(std::abs(targetY) - std::abs(currentY), std::abs(targetX) - std::abs(currentX));
+  //   float angle = atan((std::abs(targetY) - std::abs(currentY)/std::abs(targetX) - std::abs(currentX));
+  //   chassis.turn_to_angle(angle);
+  //   while (currentY != targetX && currentX != targetX) {
+  //     chassis.drive_with_voltage(crowFlyingDistance % 12)
+  //   }
+
+  // }
 
 /**
  * Resets the position, including tracking wheels.
@@ -99,3 +129,4 @@ void Odom::update_position(float ForwardTracker_position, float SidewaysTracker_
   X_position+=X_position_delta;
   Y_position+=Y_position_delta;
 }
+
