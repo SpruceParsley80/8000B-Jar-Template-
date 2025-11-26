@@ -1,5 +1,7 @@
 #include "vex.h"
 
+Odom odom;
+
 /**
  * Setter method for tracker center distances.
  * The forward tracker center distance is the horizontal distance from the 

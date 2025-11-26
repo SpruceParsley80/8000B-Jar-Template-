@@ -2,6 +2,9 @@
 
 using namespace vex;
 competition Competition;
+
+void drive_test();
+
 //big thanks to ben from my sister team for helping me change from pros to jar
 //i couldve done it myself probably but it would've been harder and we didnt have much time so
 
@@ -29,13 +32,13 @@ Drive chassis(
 
 //Pick your drive setup from the list below:
 //ZERO_TRACKER_NO_ODOM
-// ZERO_TRACKER_ODOM
+ZERO_TRACKER_ODOM
 //TANK_ONE_FORWARD_ENCODER
 //TANK_ONE_FORWARD_ROTATION
 //TANK_ONE_SIDEWAYS_ENCODER
 //TANK_ONE_SIDEWAYS_ROTATION
 //TANK_TWO_ENCODER
-TANK_TWO_ROTATION
+//TANK_TWO_ROTATION
 //HOLONOMIC_TWO_ENCODER
 //HOLONOMIC_TWO_ROTATION
 //
@@ -96,7 +99,7 @@ PORT17,
 //Input Forward Tracker center distance (a positive distance corresponds to a tracker on the right side of the robot, negative is left.)
 //For a zero tracker tank drive with odom, put the positive distance from the center of the robot to the right side of the drive.
 //This distance is in inches:
--1.5,
+7.5,
 
 //Input the Sideways Tracker Port, following the same steps as the Forward Tracker Port:
 PORT21,
@@ -126,48 +129,48 @@ void pre_auton() {
   vexcodeInit();
   default_constants();
 
-  while(!auto_started){
-    Brain.Screen.clearScreen();
-    Brain.Screen.printAt(5, 20, "JAR Template v1.2.0");
-    Brain.Screen.printAt(5, 40, "Battery Percentage:");
-    Brain.Screen.printAt(5, 60, "%d", Brain.Battery.capacity());
-    Brain.Screen.printAt(5, 80, "Chassis Heading Reading:");
-    Brain.Screen.printAt(5, 100, "%f", chassis.get_absolute_heading());
-    Brain.Screen.printAt(5, 120, "Selected Auton:");
-    switch(current_auton_selection){
-      case 0:
-        Brain.Screen.printAt(5, 140, "Auton 1");
-        break;
-      case 1:
-        Brain.Screen.printAt(5, 140, "Auton 2");
-        break;
-      case 2:
-        Brain.Screen.printAt(5, 140, "Auton 3");
-        break;
-      case 3:
-        Brain.Screen.printAt(5, 140, "Auton 4");
-        break;
-      case 4:
-        Brain.Screen.printAt(5, 140, "Auton 5");
-        break;
-      case 5:
-        Brain.Screen.printAt(5, 140, "Auton 6");
-        break;
-      case 6:
-        Brain.Screen.printAt(5, 140, "Auton 7");
-        break;
-      case 7:
-        Brain.Screen.printAt(5, 140, "Auton 8");
-        break;
-    }
-    if(Brain.Screen.pressing()){
-      while(Brain.Screen.pressing()) {}
-      current_auton_selection ++;
-    } else if (current_auton_selection == 8){
-      current_auton_selection = 0;
-    }
-    task::sleep(10);
-  }
+  // while(!auto_started){
+  //   Brain.Screen.clearScreen();
+  //   Brain.Screen.printAt(5, 20, "JAR Template v1.2.0");
+  //   Brain.Screen.printAt(5, 40, "Battery Percentage:");
+  //   Brain.Screen.printAt(5, 60, "%d", Brain.Battery.capacity());
+  //   Brain.Screen.printAt(5, 80, "Chassis Heading Reading:");
+  //   Brain.Screen.printAt(5, 100, "%f", chassis.get_absolute_heading());
+  //   Brain.Screen.printAt(5, 120, "Selected Auton:");
+  //   switch(current_auton_selection){
+  //     case 0:
+  //       Brain.Screen.printAt(5, 140, "Auton 1");
+  //       break;
+  //     case 1:
+  //       Brain.Screen.printAt(5, 140, "Auton 2");
+  //       break;
+  //     case 2:
+  //       Brain.Screen.printAt(5, 140, "Auton 3");
+  //       break;
+  //     case 3:
+  //       Brain.Screen.printAt(5, 140, "Auton 4");
+  //       break;
+  //     case 4:
+  //       Brain.Screen.printAt(5, 140, "Auton 5");
+  //       break;
+  //     case 5:
+  //       Brain.Screen.printAt(5, 140, "Auton 6");
+  //       break;
+  //     case 6:
+  //       Brain.Screen.printAt(5, 140, "Auton 7");
+  //       break;
+  //     case 7:
+  //       Brain.Screen.printAt(5, 140, "Auton 8");
+  //       break;
+  //   }
+  //   if(Brain.Screen.pressing()){
+  //     while(Brain.Screen.pressing()) {}
+  //     current_auton_selection ++;
+  //   } else if (current_auton_selection == 8){
+  //     current_auton_selection = 0;
+  //   }
+  //   task::sleep(10);
+  // }
 }
 
 /**
@@ -197,10 +200,11 @@ void pre_auton() {
 void autonomous(void) {
   auto_started = true;
   //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 2 V
-  // right_side();
+  right_side();
   //V UNCOMMENT THIS LINE IF DOWNLOADING TO SLOT 1 V
-  left_side();
-  Brain.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
+  //left_side();
+  // drive_test();
+
   wait(15, msec);
   
 }
@@ -217,43 +221,117 @@ void autonomous(void) {
 
 void usercontrol(void) {
   // User control code here, inside the loop
-  scraper = true; 
-  bool buttonA = true; 
+  scraper = false; 
+  bool buttonA = false; 
   bool buttonB = false;
   bool buttonX = false;
+  bool upWasPressed = false;
+  bool yWasPressed = false;
+
+  // Initialize odometry for driver control.
+  // Put the robot roughly 8" from left wall and 8" from back wall,
+  // facing "forward" (down the hallway) when you start driver.
+  chassis.set_coordinates(8.0, 8.0, 0.0);
+
   while (1) {
+    // ---- your intake / toggle logic ----
     int R1L1Speed = (Controller.ButtonL1.pressing() * (-1) + Controller.ButtonR1.pressing()) * 127; 
     int R2L2Speed = (Controller.ButtonL2.pressing() * (-1) + Controller.ButtonR2.pressing()) * 127; 
+
     if (Controller.ButtonA.pressing()) {
-      if(buttonA){
+      if (buttonA) {
         scraper = !scraper;
         buttonA = false; 
       }
-    } else{
+    } else {
       buttonA = true; 
     }
+
     if (Controller.ButtonX.pressing()) {
-      if(buttonX){
+      if (buttonX) {
         descore = !descore;
         buttonX = false; 
       }
-    } else{
+    } else {
       buttonX = true; 
     }
+
     if (Controller.ButtonB.pressing()) {
-      if(buttonB){
-          R1L1Speed *= 0;
+      if (buttonB) {
+        R1L1Speed *= 0;
         buttonB = !buttonB; 
       }
     }
+
     bottomIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     lowerMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     upperMiddleIntake.spin(directionType::fwd, R1L1Speed, vex::velocityUnits::pct);
     topIntake.spin(directionType::rev, R2L2Speed, vex::velocityUnits::pct);
     
     chassis.control_arcade();
-    wait(20, msec); // Sleep the task for a short amount of time to
-                    // prevent wasted resources.
+
+    // ---- Y button: debug distances + distance-odom correction ----
+    bool yNow = Controller.ButtonY.pressing();
+    if (yNow && !yWasPressed) {
+      float oldX = chassis.get_X_position();
+      float oldY = chassis.get_Y_position();
+
+      // Raw distances; -1 = no object
+      float dFront = frontDist.isObjectDetected() ? frontDist.objectDistance(inches) : -1.0f;
+      float dBack  = backDist.isObjectDetected()  ? backDist.objectDistance(inches)  : -1.0f;
+      float dLeft  = leftDist.isObjectDetected()  ? leftDist.objectDistance(inches)  : -1.0f;
+      float dRight = rightDist.isObjectDetected() ? rightDist.objectDistance(inches) : -1.0f;
+
+      bool changed = distanceOdomCorrect(true, true);
+
+      float newX = chassis.get_X_position();
+      float newY = chassis.get_Y_position();
+
+      Brain.Screen.clearScreen();
+      Brain.Screen.setCursor(1, 1);
+      Brain.Screen.print("Corr:%d", changed ? 1 : 0);
+      Brain.Screen.setCursor(2, 1);
+      Brain.Screen.print("OldX:%.1f OldY:%.1f   ", oldX, oldY);
+      Brain.Screen.setCursor(3, 1);
+      Brain.Screen.print("NewX:%.1f NewY:%.1f   ", newX, newY);
+      Brain.Screen.setCursor(4, 1);
+      Brain.Screen.print("F:%.1f B:%.1f   ", dFront, dBack);
+      Brain.Screen.setCursor(5, 1);
+      Brain.Screen.print("L:%.1f R:%.1f   ", dLeft, dRight);
+
+      Controller.Screen.clearScreen();
+      Controller.Screen.setCursor(1, 1);
+      Controller.Screen.print("C:%d", changed ? 1 : 0);
+      Controller.Screen.setCursor(2, 1);
+      Controller.Screen.print("B:%.1f   ", dBack);
+      Controller.Screen.setCursor(3, 1);
+      Controller.Screen.print("OX:%.1f OY:%.1f", oldX, oldY);
+      Controller.Screen.setCursor(4, 1);
+      Controller.Screen.print("NX:%.1f NY:%.1f", newX, newY);
+    }
+    yWasPressed = yNow;
+
+    // ---- ButtonUp: run hallway auton-style test ----
+    bool upNow = Controller.ButtonUp.pressing();
+    if (upNow && !upWasPressed) {
+      Brain.Screen.clearScreen();
+      Brain.Screen.setCursor(1, 1);
+      Brain.Screen.print("drive_test()");
+      Controller.Screen.clearScreen();
+      Controller.Screen.setCursor(1, 1);
+      Controller.Screen.print("Running drive_test");
+
+      drive_test();
+    }
+    upWasPressed = upNow;
+
+    // ---- Always show current pose on Brain (optional) ----
+    float x = chassis.get_X_position();
+    float y = chassis.get_Y_position();
+    Brain.Screen.setCursor(7, 1);
+    Brain.Screen.print("X: %.1f  Y: %.1f   ", x, y);
+
+    wait(20, msec);
   }
 }
 

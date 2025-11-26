@@ -23,6 +23,11 @@ extern digital_out scraper;
 extern digital_out descore;
 // extern digital_out descore; 
 
+extern vex::distance frontDist;
+extern vex::distance backDist;
+extern vex::distance leftDist;
+extern vex::distance rightDist;
+
 extern controller Controller; 
 
 void  vexcodeInit( void );

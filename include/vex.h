@@ -24,6 +24,7 @@
 #include "JAR-Template/util.h"
 #include "JAR-Template/PID.h"
 #include "autons.h"
+#include "JAR-Template/distance_odom.h"
 
 #define waitUntil(condition)                                                   \
   do {                                                                         \
