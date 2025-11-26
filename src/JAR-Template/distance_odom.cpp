@@ -214,7 +214,7 @@ bool distanceOdomCorrect(bool correctX, bool correctY) {
     return false; // nothing usable
   }
 
-  // --- DIRECTLY UPDATE ODOM ---
+  // --- DIRECTLY UPDATE ODOM --- //didy
   if (countX > 0) {
     odom.X_position = sumX / countX;
   }
