@@ -17,14 +17,13 @@ extern distance rightDist;
 // ---------- FIELD GEOMETRY ----------
 // Origin at back-left inside corner of the field: (0,0)
 // X: 0 -> right side wall
-// Y: 0 -> far side wall (away from you)
+// Y: 0 -> back wall (behind the robot at start)
 //
-// Measure your actual inside wall-to-wall distance and plug it in.
-// 6 tiles × 24" = 144", minus wall thickness → usually ~141-142" inside.
-// For now, use 141" and tune if needed.
+// Inside dimension is about 141" on a 6x6 VRC field.
+// You can tweak these if you want tighter absolute alignment.
 
-static constexpr float FIELD_WIDTH_IN  = 141.0f;  // X direction
-static constexpr float FIELD_LENGTH_IN = 141.0f;  // Y direction
+static constexpr float FIELD_WIDTH_IN  = 141.0f;  // X direction (left-right)
+static constexpr float FIELD_LENGTH_IN = 141.0f;  // Y direction (back-front)
 
 static constexpr float LEFT_WALL_X  = 0.0f;
 static constexpr float RIGHT_WALL_X = FIELD_WIDTH_IN;
@@ -33,22 +32,30 @@ static constexpr float BACK_WALL_Y  = 0.0f;
 static constexpr float FRONT_WALL_Y = FIELD_LENGTH_IN;
 
 // ---------- ROBOT GEOMETRY ----------
-// Robot ~17.5" long (front-back), 15" wide (left-right)
-// Front sensor inset 1" from front bumper  -> center->front ≈ 7.75"
-// Back sensor inset 5" from back bumper   -> center->back ≈ 3.75"
-// Side sensors at edges                   -> center->side ≈ 7.5"
+// Robot ~17.5" long (front-back), 15" wide (left-right).
+// Half-length ≈ 8.75", half-width ≈ 7.5".
+//
+// You measured:
+//  - Back sensor is 1" from the back bumper.
+//  - Front sensor is 4.25" from the front bumper.
+//  - Side sensors are flush with the sides.
+//
+// So from robot center:
+//  - Back sensor is 8.75 - 1.0  = 7.75" toward the BACK wall.
+//  - Front sensor is 8.75 - 4.25 = 4.50" toward the FRONT wall.
+//  - Side sensors are 7.50" toward left/right walls.
 
-static constexpr float FRONT_SENSOR_OFFSET_Y = 7.75f;  // forward from center
-static constexpr float BACK_SENSOR_OFFSET_Y  = 3.75f;  // back from center
-static constexpr float LEFT_SENSOR_OFFSET_X  = 7.50f;  // left from center
-static constexpr float RIGHT_SENSOR_OFFSET_X = 7.50f;  // right from center
+static constexpr float FRONT_SENSOR_OFFSET_Y = 4.50f;  // from center toward FRONT
+static constexpr float BACK_SENSOR_OFFSET_Y  = 7.75f;  // from center toward BACK
+static constexpr float LEFT_SENSOR_OFFSET_X  = 7.50f;  // from center toward LEFT
+static constexpr float RIGHT_SENSOR_OFFSET_X = 7.50f;  // from center toward RIGHT
 
 // Distance sensor trust range (based on your tests)
 static constexpr float MIN_TRUST_DIST_IN = 3.0f;
 static constexpr float MAX_TRUST_DIST_IN = 40.0f;
 
 // Only correct when you're roughly axis-aligned to the field
-// (so sensors point along X/Y not at weird angles).
+// (so sensors point along X/Y, not diagonally).
 static constexpr float HEADING_TOL_DEG = 20.0f;
 
 // ---------- Helper: read a sensor if it sees something ----------
@@ -65,37 +72,41 @@ static bool readTrusted(distance &sensor, float &outInches) {
 
 // ---------- Conversions for specific headings ----------
 //
-// NOTE: These assume robot heading is close to 0° or 180°.
-//  - 0° means robot's front faces +Y (toward FRONT_WALL_Y).
-//  - 180° means front faces -Y (toward BACK_WALL_Y).
+// Convention:
+// - 0°  : robot front points +Y (toward FRONT_WALL_Y).
+// - 180°: robot front points -Y (toward BACK_WALL_Y).
 //
-// Left/Right sensors always look sideways to the X walls,
-// but which wall they see depends on heading.
-// Front/Back sensors switch which wall they see at 0° vs 180°.
+// Left/right sensors always look sideways to the X walls,
+// but which wall they "see" depends on heading.
+// Front/back sensors swap which Y wall they see at 0° vs 180°.
 
 // Heading ~ 0° (front toward +Y):
-//   - back sensor → BACK_WALL_Y
+//   - back sensor  → BACK_WALL_Y
 //   - front sensor → FRONT_WALL_Y
-//   - left sensor → LEFT_WALL_X
+//   - left sensor  → LEFT_WALL_X
 //   - right sensor → RIGHT_WALL_X
 
 static float centerYFromBack_h0(float d) {
-  // (Ycenter - BACK_WALL_Y) - BACK_SENSOR_OFFSET_Y = d  => Ycenter = BACK_WALL_Y + BACK_SENSOR_OFFSET_Y + d
+  // (Ycenter - BACK_WALL_Y) - BACK_SENSOR_OFFSET_Y = d
+  // => Ycenter = BACK_WALL_Y + BACK_SENSOR_OFFSET_Y + d
   return BACK_WALL_Y + BACK_SENSOR_OFFSET_Y + d;
 }
 
 static float centerYFromFront_h0(float d) {
-  // FRONT_WALL_Y - (Ycenter + FRONT_SENSOR_OFFSET_Y) = d => Ycenter = FRONT_WALL_Y - FRONT_SENSOR_OFFSET_Y - d
+  // FRONT_WALL_Y - (Ycenter + FRONT_SENSOR_OFFSET_Y) = d
+  // => Ycenter = FRONT_WALL_Y - FRONT_SENSOR_OFFSET_Y - d
   return FRONT_WALL_Y - FRONT_SENSOR_OFFSET_Y - d;
 }
 
 static float centerXFromLeft_h0(float d) {
-  // (Xcenter - LEFT_WALL_X) - LEFT_SENSOR_OFFSET_X = d => Xcenter = LEFT_WALL_X + LEFT_SENSOR_OFFSET_X + d
+  // (Xcenter - LEFT_WALL_X) - LEFT_SENSOR_OFFSET_X = d
+  // => Xcenter = LEFT_WALL_X + LEFT_SENSOR_OFFSET_X + d
   return LEFT_WALL_X + LEFT_SENSOR_OFFSET_X + d;
 }
 
 static float centerXFromRight_h0(float d) {
-  // RIGHT_WALL_X - (Xcenter + RIGHT_SENSOR_OFFSET_X) = d => Xcenter = RIGHT_WALL_X - RIGHT_SENSOR_OFFSET_X - d
+  // RIGHT_WALL_X - (Xcenter + RIGHT_SENSOR_OFFSET_X) = d
+  // => Xcenter = RIGHT_WALL_X - RIGHT_SENSOR_OFFSET_X - d
   return RIGHT_WALL_X - RIGHT_SENSOR_OFFSET_X - d;
 }
 
@@ -106,24 +117,28 @@ static float centerXFromRight_h0(float d) {
 //   - right sensor → LEFT_WALL_X
 
 static float centerYFromFront_h180(float d) {
-  // (Ycenter - BACK_WALL_Y) - FRONT_SENSOR_OFFSET_Y = d => Ycenter = BACK_WALL_Y + FRONT_SENSOR_OFFSET_Y + d
+  // (Ycenter - BACK_WALL_Y) - FRONT_SENSOR_OFFSET_Y = d
+  // => Ycenter = BACK_WALL_Y + FRONT_SENSOR_OFFSET_Y + d
   return BACK_WALL_Y + FRONT_SENSOR_OFFSET_Y + d;
 }
 
 static float centerYFromBack_h180(float d) {
-  // FRONT_WALL_Y - (Ycenter + BACK_SENSOR_OFFSET_Y) = d => Ycenter = FRONT_WALL_Y - BACK_SENSOR_OFFSET_Y - d
+  // FRONT_WALL_Y - (Ycenter + BACK_SENSOR_OFFSET_Y) = d
+  // => Ycenter = FRONT_WALL_Y - BACK_SENSOR_OFFSET_Y - d
   return FRONT_WALL_Y - BACK_SENSOR_OFFSET_Y - d;
 }
 
 static float centerXFromLeft_h180(float d) {
   // LEFT sensor now faces RIGHT wall:
-  // RIGHT_WALL_X - (Xcenter + LEFT_SENSOR_OFFSET_X) = d => Xcenter = RIGHT_WALL_X - LEFT_SENSOR_OFFSET_X - d
+  // RIGHT_WALL_X - (Xcenter + LEFT_SENSOR_OFFSET_X) = d
+  // => Xcenter = RIGHT_WALL_X - LEFT_SENSOR_OFFSET_X - d
   return RIGHT_WALL_X - LEFT_SENSOR_OFFSET_X - d;
 }
 
 static float centerXFromRight_h180(float d) {
   // RIGHT sensor now faces LEFT wall:
-  // (Xcenter - LEFT_WALL_X) - RIGHT_SENSOR_OFFSET_X = d => Xcenter = LEFT_WALL_X + RIGHT_SENSOR_OFFSET_X + d
+  // (Xcenter - LEFT_WALL_X) - RIGHT_SENSOR_OFFSET_X = d
+  // => Xcenter = LEFT_WALL_X + RIGHT_SENSOR_OFFSET_X + d
   return LEFT_WALL_X + RIGHT_SENSOR_OFFSET_X + d;
 }
 
@@ -136,7 +151,6 @@ bool distanceOdomCorrect(bool correctX, bool correctY) {
   // Determine which cardinal direction we're closest to.
   float diff0   = fabs(reduce_negative_180_to_180(heading - 0.0f));
   float diff180 = fabs(reduce_negative_180_to_180(heading - 180.0f));
-  // (You can extend to 90°/270° later if you want.)
 
   bool use_h0   = diff0   <= HEADING_TOL_DEG;
   bool use_h180 = diff180 <= HEADING_TOL_DEG;
@@ -214,7 +228,7 @@ bool distanceOdomCorrect(bool correctX, bool correctY) {
     return false; // nothing usable
   }
 
-  // --- DIRECTLY UPDATE ODOM --- //didy
+  // --- DIRECTLY UPDATE ODOM ---
   if (countX > 0) {
     odom.X_position = sumX / countX;
   }
@@ -227,4 +241,3 @@ bool distanceOdomCorrect(bool correctX, bool correctY) {
 
   return true;
 }
-//test

@@ -217,3 +217,19 @@ float clamp_min_voltage(float drive_output, float drive_min_voltage){
   }
   return drive_output;
 }
+
+// At the very bottom of util.cpp:
+
+// We need access to the global chassis object declared in main.cpp
+extern Drive chassis;
+
+/**
+ * Robot-centric relative turn helper.
+ * Positive delta_deg = turn left (CCW), negative = turn right (CW).
+ * Uses chassis.get_absolute_heading() and chassis.turn_to_angle().
+ */
+void turn_relative(float delta_deg) {
+  float current = chassis.get_absolute_heading();
+  float target  = reduce_0_to_360(current + delta_deg);
+  chassis.turn_to_angle(target);
+}
