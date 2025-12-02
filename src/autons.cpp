@@ -173,7 +173,7 @@ void right_side() {
   // distanceOdomCorrect(false, true);
 
   // 3) Turn 90 degrees (robot-centric)
-  turn_relative(90.0f);
+  turn_relative(-90.0f);
 
   // 4) Drive forward 14 inches
   chassis.drive_distance(14.0f);
