@@ -140,17 +140,21 @@ void right_side() {
   // Use odom-tuned constants for smoother motion
   odom_constants();
 
-  // Slightly conservative voltages for auton safety
-  chassis.drive_max_voltage   = 8;
+  // Global caps (we also pass per-move caps to drive_distance)
+  chassis.drive_max_voltage   = 12;
   chassis.heading_max_voltage = 6;
 
-  // --- 0) Initial pose + distance-sensor correction on Y only ---
-  // Place the robot in your right-side blue starting spot,
-  // roughly facing upfield (0°).
+  // --- 0) Initial pose & distance-sensor-based localization ---
+
+  // Rough seed; distance_odom will actually set the real X/Y.
   chassis.set_coordinates(0.0, 0.0, 0.0);
 
-  // Use distance sensors ONLY to correct Y (front/back).
-  distanceOdomCorrect(false, true);
+  // Let sensors wake up
+  wait(150, msec);
+
+  // At the start you're aligned with real walls, so we can trust all 4 sensors:
+  // correct both X and Y using distance sensor odom.
+  distanceOdomCorrect(true, true);
 
   float startX = chassis.get_X_position();
   float startY = chassis.get_Y_position();
@@ -160,48 +164,97 @@ void right_side() {
   Brain.Screen.print("RS X:%.1f Y:%.1f   ", startX, startY);
 
   // ============================================================
-  // Sequence you asked for (robot-centric unless noted)
+  // Sequence (robot-centric turns, straight drives with heading)
   // ============================================================
 
-  // 1) Turn 7 degrees (robot-centric)
-  turn_relative(7.0f);
+  // ---- Step 1: turn 10° robot-centric (tank turn) ----
+  turn_relative(11.0f);                      // uses chassis.turn_to_angle() under the hood
+  float H1 = chassis.get_absolute_heading(); // new field heading
 
-  // 2) Drive forward 28 inches
-  chassis.drive_distance(28.0f);
+  // start intaking while we move toward the center balls
+  intake(430);
 
-  // Optional: a light Y correction could go here if desired:
-  // distanceOdomCorrect(false, true);
+  // ---- Step 2: drive forward 30" holding heading H1 ----
+  chassis.drive_distance(30.0f, H1,
+                         6.0f,   // drive max V
+                         3.0f);  // heading correction max V
 
-  // 3) Turn 90 degrees (robot-centric)
-  turn_relative(-90.0f);
+  // small backup to position better before turning
+  chassis.drive_distance(-7.0f, H1,
+                         8.0f,
+                         3.0f);
+  intake(0);
+  // ---- Step 3: turn -55° robot-centric (tank turn) ----
+  turn_relative(-55.0f);                    // right turn
+  float H2 = chassis.get_absolute_heading(); // new field heading
 
-  // 4) Drive forward 14 inches
-  chassis.drive_distance(14.0f);
+  // ==============================
+  //  PUSH-UP / LOW-GOAL SCORING
+  // ==============================
 
-  // 5) Drive backwards 51 inches
-  chassis.drive_distance(-51.0f);
+  // "Ramming speed" into low goal
+  chassis.drive_distance(11.0f, H2,
+                         12.0f,  // strong drive
+                         7.0f);  // strong heading correction
 
-  // 6) Turn to 180 degrees FIELD-CENTRIC (absolute)
-  chassis.turn_to_angle(180.0f);
+  wait(250, msec);
 
-  // At 180°, front/back sensors now see opposite walls.
-  // Again, correct ONLY Y to avoid pushback confusion on the sides.
-  distanceOdomCorrect(false, true);
+  // Deploy scraper and outtake to score
+  scraper.set(1);
+  wait(250, msec);  
+  outtake(430);
 
-  // 7) Drive forward 5 inches
-  chassis.drive_distance(5.0f);
+  // Nudge a bit further into the goal
+  chassis.drive_distance(2.0f, H2,
+                         12.0f,
+                         6.7f);
 
-  // 8) Back up 30 inches
-  chassis.drive_distance(-30.0f);
+  wait(1000, msec);
 
-  // Final Y correction + print where we ended
-  distanceOdomCorrect(false, true);
-  float endX = chassis.get_X_position();
-  float endY = chassis.get_Y_position();
+  // Retract scraper
+  scraper.set(0);
 
-  Brain.Screen.setCursor(2, 1);
-  Brain.Screen.print("End X:%.1f Y:%.1f   ", endX, endY);
+  // Back away from the goal
+  chassis.drive_distance(-10.0f, H2,
+                         12.0f,
+                         6.7f);
+
+  // (Optionally you could stop intake/outtake here if desired)
+
+  // ---- Step 5: drive backwards 51" holding heading H2 ----
+  chassis.drive_distance(-40.0f, H2,
+                         8.0f,
+                         3.0f);
+
+//   // ---- Step 6: turn to 180° field-centric (tank turn) ----
+//   chassis.turn_to_angle(180.0f);
+//   float H180 = 180.0f;  // explicit for clarity
+
+//   // At this pose you may be nearer a back/side wall again.
+//   // To avoid pushbacks messing with X, correct Y-only here:
+//   distanceOdomCorrect(false, true);
+
+//   // ---- Step 7: drive forward 5" holding 180° ----
+//   chassis.drive_distance(5.0f, H180,
+//                          6.0f,
+//                          3.0f);
+
+//   // ---- Step 8: back up 30" holding 180° ----
+//   chassis.drive_distance(-30.0f, H180,
+//                          6.0f,
+//                          3.0f);
+
+//   // Final Y snap from distance sensors
+//   distanceOdomCorrect(false, true);
+
+//   float endX = chassis.get_X_position();
+//   float endY = chassis.get_Y_position();
+
+//   Brain.Screen.setCursor(2, 1);
+//   Brain.Screen.print("End X:%.1f Y:%.1f   ", endX, endY);
 }
+
+
 
 //   chassis.turn_timeout = 1000;
 //   chassis.drive_timeout = 2000;
