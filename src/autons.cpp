@@ -57,7 +57,38 @@ void odom_constants() {
 // Intake helper functions
 // ==========================
 
+
 // DEFAULT SPEEDS ARE 480
+
+// Background task: wait until robot has moved a certain distance,
+// then start high-goal scoring.
+int scoreHighHalfwayTask() {
+  // Record starting pose
+  float startX = chassis.get_X_position();
+  float startY = chassis.get_Y_position();
+
+  const float triggerDist = 19.0f;  // half of 28"
+
+  while (true) {
+    float curX = chassis.get_X_position();
+    float curY = chassis.get_Y_position();
+
+    float dx = curX - startX;
+    float dy = curY - startY;
+    float dist = sqrtf(dx*dx + dy*dy);
+
+    if (dist >= triggerDist) {
+      // Start scoring; non-blocking spinFor means this returns quickly.
+      scoreHigh(480);
+      break;
+    }
+
+    task::sleep(10);  // don't hog CPU
+  }
+
+  return 0;
+}
+
 void intake(int speed) {
   bottomIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
   lowerMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
@@ -172,18 +203,18 @@ void right_side() {
   float H1 = chassis.get_absolute_heading(); // new field heading
 
   // start intaking while we move toward the center balls
-  intake(430);
+  intake(400);
 
   // ---- Step 2: drive forward 30" holding heading H1 ----
   chassis.drive_distance(30.0f, H1,
                          6.0f,   // drive max V
                          3.0f);  // heading correction max V
-
+  intake(0);
   // small backup to position better before turning
   chassis.drive_distance(-7.0f, H1,
                          8.0f,
                          3.0f);
-  intake(0);
+  
   // ---- Step 3: turn -55° robot-centric (tank turn) ----
   turn_relative(-55.0f);                    // right turn
   float H2 = chassis.get_absolute_heading(); // new field heading
@@ -202,7 +233,7 @@ void right_side() {
   // Deploy scraper and outtake to score
   scraper.set(1);
   wait(250, msec);  
-  outtake(430);
+  outtake(480);
 
   // Nudge a bit further into the goal
   chassis.drive_distance(2.0f, H2,
@@ -222,36 +253,178 @@ void right_side() {
   // (Optionally you could stop intake/outtake here if desired)
 
   // ---- Step 5: drive backwards 51" holding heading H2 ----
-  chassis.drive_distance(-40.0f, H2,
+  chassis.drive_distance(-39.0f, H2,
                          8.0f,
                          3.0f);
 
-//   // ---- Step 6: turn to 180° field-centric (tank turn) ----
-//   chassis.turn_to_angle(180.0f);
-//   float H180 = 180.0f;  // explicit for clarity
+  // ---- Step 6: turn to 180° field-centric (tank turn) ----
+  chassis.turn_to_angle(180.0f);
+  float H180 = 180.0f;  // explicit for clarity
+  scraper.set(1);
+  wait(300, msec);
+  intake(430);
+  // At this pose you may be nearer a back/side wall again.
+  // To avoid pushbacks messing with X, correct Y-only here:
+  distanceOdomCorrect(false, true);
 
-//   // At this pose you may be nearer a back/side wall again.
-//   // To avoid pushbacks messing with X, correct Y-only here:
-//   distanceOdomCorrect(false, true);
+// ---- Step 7: drive forward 14" holding 180° with timeout ----
+// distance, heading,  driveV, headingV,  settle_error, settle_time(ms), timeout(ms)
+chassis.drive_distance(15.5f, H180,
+                       6.0f,   // drive max voltage
+                       3.0f,   // heading max voltage
+                       1.5f,   // settle error (inches)
+                       300.0f, // settle time (ms)
+                       1500.0f // timeout (ms) -> 1.5 seconds
+);
 
-//   // ---- Step 7: drive forward 5" holding 180° ----
-//   chassis.drive_distance(5.0f, H180,
-//                          6.0f,
-//                          3.0f);
+  wait(500, msec);
+  scoreHigh(480);
+// ---- Step 8: back up 28" holding 180° ----
+// Launch a background task that will start scoreHigh
+// once we've moved about 14" from where this backup starts.
+task scoreHalfTask(scoreHighHalfwayTask);
 
-//   // ---- Step 8: back up 30" holding 180° ----
-//   chassis.drive_distance(-30.0f, H180,
-//                          6.0f,
-//                          3.0f);
+// One continuous backing move; no mid-stop.
+chassis.drive_distance(-28.0f, H180,
+                       10.0f,
+                       4.0f);
 
-//   // Final Y snap from distance sensors
-//   distanceOdomCorrect(false, true);
+  // Final Y snap from distance sensors
+  distanceOdomCorrect(false, true);
 
-//   float endX = chassis.get_X_position();
-//   float endY = chassis.get_Y_position();
+  float endX = chassis.get_X_position();
+  float endY = chassis.get_Y_position();
 
-//   Brain.Screen.setCursor(2, 1);
-//   Brain.Screen.print("End X:%.1f Y:%.1f   ", endX, endY);
+  Brain.Screen.setCursor(2, 1);
+  Brain.Screen.print("End X:%.1f Y:%.1f   ", endX, endY);
+}
+
+void left_side() {
+  // Use odom-tuned constants for smoother motion
+  odom_constants();
+
+  // Global caps (we also pass per-move caps to drive_distance)
+  chassis.drive_max_voltage   = 12;
+  chassis.heading_max_voltage = 6;
+
+  // --- 0) Initial pose & distance-sensor-based localization ---
+
+  // Rough seed; distance_odom will actually set the real X/Y.
+  chassis.set_coordinates(0.0, 0.0, 0.0);
+
+  // Let sensors wake up
+  wait(150, msec);
+
+  // At the start you're aligned with real walls, so we can trust all 4 sensors:
+  // correct both X and Y using distance sensor odom.
+  distanceOdomCorrect(true, true);
+
+  float startX = chassis.get_X_position();
+  float startY = chassis.get_Y_position();
+
+  Brain.Screen.clearScreen();
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("LS X:%.1f Y:%.1f   ", startX, startY);
+
+  // ============================================================
+  // Sequence (robot-centric turns, straight drives with heading)
+  // Mirrored from right_side
+  // ============================================================
+
+  // ---- Step 1: turn -11° robot-centric (mirror of +11°) ----
+  turn_relative(-11.0f);                     // tank turn
+  float H1 = chassis.get_absolute_heading(); // new field heading
+
+  // start intaking while we move toward the center balls
+  intake(400);
+
+  // ---- Step 2: drive forward 30" holding heading H1 ----
+  chassis.drive_distance(30.0f, H1,
+                         6.0f,   // drive max V
+                         3.0f);  // heading correction max V
+
+  intake(0);
+
+  // small backup to position better before turning
+  chassis.drive_distance(-7.0f, H1,
+                         8.0f,
+                         3.0f);
+
+  // ---- Step 3: turn +55° robot-centric (mirror of -55°) ----
+  turn_relative(55.0f);                     // left turn (mirror)
+  float H2 = chassis.get_absolute_heading(); // new field heading
+
+  // ==============================
+  //  MID-GOAL SCORING (mirror)
+  //  uses scoreMid instead of low-goal push-up
+  // ==============================
+
+  // Drive into position for the middle-height goal
+  chassis.drive_distance(11.0f, H2,
+                         12.0f,  // strong drive
+                         7.0f);  // strong heading correction
+
+  wait(250, msec);
+
+  // Fire into the mid-height goal
+  scoreMid(480);   // topIntake spinFor(..., false) → non-blocking
+
+  // Optional: small settle time to let triballs clear
+  wait(1000, msec);
+
+  // Back away from the goal
+  chassis.drive_distance(-10.0f, H2,
+                         12.0f,
+                         6.7f);
+
+  // ---- Step 5: drive backwards 39" holding heading H2 ----
+  chassis.drive_distance(-39.0f, H2,
+                         8.0f,
+                         3.0f);
+
+  // ---- Step 6: turn to 180° field-centric (tank turn) ----
+  chassis.turn_to_angle(180.0f);
+  float H180 = 180.0f;  // explicit for clarity
+
+  scraper.set(1);
+  wait(300, msec);
+  intake(430);
+
+  // At this pose you may be nearer a back/side wall again.
+  // To avoid pushbacks messing with X, correct Y-only here:
+  distanceOdomCorrect(false, true);
+
+  // ---- Step 7: drive forward 15.5" holding 180° with timeout ----
+  // distance, heading,  driveV, headingV,  settle_error, settle_time(ms), timeout(ms)
+  chassis.drive_distance(15.5f, H180,
+                         6.0f,   // drive max voltage
+                         3.0f,   // heading max voltage
+                         1.5f,   // settle error (inches)
+                         300.0f, // settle time (ms)
+                         1500.0f // timeout (ms)
+  );
+
+  wait(500, msec);
+  scoreHigh(480);
+
+  // ---- Step 8: back up 28" holding 180° ----
+  // Launch a background task that will start scoreHigh
+  // once we've moved about 14" from where this backup starts.
+  task scoreHalfTask(scoreHighHalfwayTask);
+
+  // One continuous backing move; no mid-stop.
+  chassis.drive_distance(-28.0f, H180,
+                         10.0f,
+                         4.0f);
+
+  // Final Y snap from distance sensors
+  distanceOdomCorrect(false, true);
+
+  float endX = chassis.get_X_position();
+  float endY = chassis.get_Y_position();
+
+  Brain.Screen.setCursor(2, 1);
+  Brain.Screen.print("End X:%.1f Y:%.1f   ", endX, endY);
 }
 
 
