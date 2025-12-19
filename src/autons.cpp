@@ -14,7 +14,13 @@ using namespace vex;
 // This helper is implemented in util.cpp
 void turn_relative(float delta_deg);
 
+// Forward declarations for helpers used before they’re defined
+void intake(int speed);
+void scoreHigh(int speed);
+
+/*
 //  motor_group intakes = motor_group(bottomIntake, lowerMiddleIntake, upperMiddleIntake);
+*/
 
 // Simple odom demo (you can keep or ignore)
 void right_odom() {
@@ -57,6 +63,89 @@ void odom_constants() {
 // Intake helper functions
 // ==========================
 
+// ------------ Intake anti-jam global state ------------
+int  currentIntakeTargetRPM = 0;   // >0 when we want to intake
+bool intakeUnjamming        = false;
+
+bool intakeJamEnabled       = false;
+bool intakeJamTaskStarted   = false;
+
+// Background task: detects jams on upperMiddleIntake (PORT20)
+int intakeAntiJamTask() {
+  const float MIN_TARGET_RPM  = 100.0f; // ignore tiny setpoints
+  const float JAM_RATIO       = 0.45f;  // <45% of target rpm => suspect jam
+  const int   CHECK_PERIOD_MS = 20;     // how often we check
+  const int   JAM_TIME_MS     = 180;    // must be jammed this long
+  const int   UNJAM_TIME_MS   = 240;    // how long to reverse
+  const float UNJAM_VOLT      = 11.0f;  // strong reverse voltage
+
+  int jamTimer = 0;
+
+  while (true) {
+    // Only care when auton has enabled this AND we want to intake
+    if (!intakeJamEnabled || currentIntakeTargetRPM <= 0) {
+      jamTimer = 0;
+      task::sleep(CHECK_PERIOD_MS);
+      continue;
+    }
+
+    // Don’t stack multiple unjams
+    if (intakeUnjamming) {
+      jamTimer = 0;
+      task::sleep(CHECK_PERIOD_MS);
+      continue;
+    }
+
+    float targetRPM = (float)currentIntakeTargetRPM;
+    float actualRPM = upperMiddleIntake.velocity(rpm);
+
+    // Check for "stuck" condition
+    if (fabs(targetRPM) > MIN_TARGET_RPM &&
+        fabs(actualRPM) < JAM_RATIO * fabs(targetRPM)) {
+
+      jamTimer += CHECK_PERIOD_MS;
+
+      if (jamTimer >= JAM_TIME_MS) {
+        // ---- RUN STRONG UNJAM ----
+        intakeUnjamming = true;
+
+        // Reverse HARD in outtake direction (opposite of intake()).
+        // If this is the wrong direction on your robot,
+        // swap forward <-> reverse here.
+        bottomIntake.spin(forward, UNJAM_VOLT, volt);
+        lowerMiddleIntake.spin(forward, UNJAM_VOLT, volt);
+        upperMiddleIntake.spin(forward, UNJAM_VOLT, volt);
+        task::sleep(UNJAM_TIME_MS);
+
+        // Resume normal commanded intake in RPM mode
+        intake(currentIntakeTargetRPM);
+
+        intakeUnjamming = false;
+        jamTimer        = 0;
+      }
+    } else {
+      // RPM looks healthy
+      jamTimer = 0;
+    }
+
+    task::sleep(CHECK_PERIOD_MS);
+  }
+
+  return 0;
+}
+
+void startIntakeAntiJam() {
+  if (!intakeJamTaskStarted) {
+    task t(intakeAntiJamTask);
+    intakeJamTaskStarted = true;
+  }
+  intakeJamEnabled = true;
+}
+
+void stopIntakeAntiJam() {
+  intakeJamEnabled = false;
+}
+
 
 // DEFAULT SPEEDS ARE 480
 
@@ -67,7 +156,7 @@ int scoreHighHalfwayTask() {
   float startX = chassis.get_X_position();
   float startY = chassis.get_Y_position();
 
-  const float triggerDist = 19.0f;  // half of 28"
+  const float triggerDist = 21.0f;  // half of 28"
 
   while (true) {
     float curX = chassis.get_X_position();
@@ -89,10 +178,39 @@ int scoreHighHalfwayTask() {
   return 0;
 }
 
+// ==== Intake helpers used by auton (continuous spin, not spinFor) ====
+
 void intake(int speed) {
-  bottomIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
-  lowerMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
-  upperMiddleIntake.spinFor(reverse, 10000, deg, speed, rpm, false);
+  // speed is RPM for auton intake
+  currentIntakeTargetRPM = speed;
+
+  if (speed > 0) {
+    // Intake direction – keep the same direction you were using before.
+    // If triballs go the wrong way, swap reverse <-> forward here.
+    bottomIntake.spin(reverse, speed, rpm);
+    lowerMiddleIntake.spin(reverse, speed, rpm);
+    upperMiddleIntake.spin(reverse, speed, rpm);
+  } else {
+    // Stop intake
+    bottomIntake.stop(brakeType::coast);
+    lowerMiddleIntake.stop(brakeType::coast);
+    upperMiddleIntake.stop(brakeType::coast);
+  }
+}
+
+void stopIntake() {
+  intake(0);
+}
+
+void outtake(int speed) {
+  // While outtaking, we consider "intake" target to be 0 so the jam
+  // detector doesn't try to fight this.
+  currentIntakeTargetRPM = 0;
+
+  // Outtake direction – opposite of intake; swap if it’s wrong.
+  bottomIntake.spin(forward, speed, rpm);
+  lowerMiddleIntake.spin(forward, speed, rpm);
+  upperMiddleIntake.spin(forward, speed, rpm);
 }
 
 void intakeForScoring(int speed) {
@@ -111,12 +229,6 @@ void upperUnclogger(int speed) {
   topIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
   upperMiddleIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
   lowerMiddleIntake.spinFor(reverse, 10000, deg, speed / 2, rpm, false);
-}
-
-void outtake(int speed) { // 480 is default
-  bottomIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
-  lowerMiddleIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
-  upperMiddleIntake.spinFor(reverse, -10000, deg, speed, rpm, false);
 }
 
 void scoreHigh(int speed) {
@@ -154,19 +266,9 @@ void drive_test() {
 // Actual right-side auton
 // ==========================
 //
-// Sequence (robot-centric unless otherwise noted):
-//  1) turn 7 degrees
-//  2) drive forward 28 inches
-//  3) turn 90 degrees
-//  4) drive forward 14 inches
-//  5) drive backwards 51 inches
-//  6) turn to 180 degrees FIELD-CENTRIC
-//  7) drive forward 5 inches
-//  8) back up 30 inches
-//
 // distanceOdomCorrect is used to correct Y with back/front walls only,
 // so pushback elements near the sides don’t trash X.
-
+//
 void right_side() {
   // Use odom-tuned constants for smoother motion
   odom_constants();
@@ -210,13 +312,14 @@ void right_side() {
                          6.0f,   // drive max V
                          3.0f);  // heading correction max V
   intake(0);
+
   // small backup to position better before turning
   chassis.drive_distance(-7.0f, H1,
                          8.0f,
                          3.0f);
   
   // ---- Step 3: turn -55° robot-centric (tank turn) ----
-  turn_relative(-55.0f);                    // right turn
+  turn_relative(-55.0f);                     // right turn
   float H2 = chassis.get_absolute_heading(); // new field heading
 
   // ==============================
@@ -244,50 +347,49 @@ void right_side() {
 
   // Retract scraper
   scraper.set(0);
+  intake(0);
 
   // Back away from the goal
   chassis.drive_distance(-10.0f, H2,
                          12.0f,
                          6.7f);
 
-  // (Optionally you could stop intake/outtake here if desired)
-
-  // ---- Step 5: drive backwards 51" holding heading H2 ----
-  chassis.drive_distance(-39.0f, H2,
+  // ---- Step 5: drive backwards 41" holding heading H2 ----
+  chassis.drive_distance(-41.0f, H2,
                          8.0f,
                          3.0f);
 
   // ---- Step 6: turn to 180° field-centric (tank turn) ----
   chassis.turn_to_angle(180.0f);
   float H180 = 180.0f;  // explicit for clarity
+
   scraper.set(1);
   wait(300, msec);
   intake(430);
+
   // At this pose you may be nearer a back/side wall again.
   // To avoid pushbacks messing with X, correct Y-only here:
   distanceOdomCorrect(false, true);
 
-// ---- Step 7: drive forward 14" holding 180° with timeout ----
-// distance, heading,  driveV, headingV,  settle_error, settle_time(ms), timeout(ms)
-chassis.drive_distance(15.5f, H180,
-                       6.0f,   // drive max voltage
-                       3.0f,   // heading max voltage
-                       1.5f,   // settle error (inches)
-                       300.0f, // settle time (ms)
-                       1500.0f // timeout (ms) -> 1.5 seconds
-);
+  // ---- Step 7: drive forward 15.5" holding 180° with timeout ----
+  // distance, heading,  driveV, headingV,  settle_error, settle_time(ms), timeout(ms)
+  chassis.drive_distance(15.5f, H180,
+                         6.0f,   // drive max voltage
+                         3.0f,   // heading max voltage
+                         1.5f,   // settle error (inches)
+                         300.0f, // settle time (ms)
+                         1500.0f // timeout (ms) -> 1.5 seconds
+  );
 
   wait(500, msec);
-  scoreHigh(480);
-// ---- Step 8: back up 28" holding 180° ----
-// Launch a background task that will start scoreHigh
-// once we've moved about 14" from where this backup starts.
-task scoreHalfTask(scoreHighHalfwayTask);
 
-// One continuous backing move; no mid-stop.
-chassis.drive_distance(-28.0f, H180,
-                       10.0f,
-                       4.0f);
+  // ---- Step 8: back up 28" holding 180° ----
+  chassis.drive_distance(-28.0f, H180,
+                         10.0f,
+                         4.0f);
+
+  scoreHigh(480);
+  intake(480);
 
   // Final Y snap from distance sensors
   distanceOdomCorrect(false, true);
@@ -343,44 +445,42 @@ void left_side() {
                          6.0f,   // drive max V
                          3.0f);  // heading correction max V
 
-  intake(0);
 
   // small backup to position better before turning
   chassis.drive_distance(-7.0f, H1,
                          8.0f,
                          3.0f);
 
-  // ---- Step 3: turn +55° robot-centric (mirror of -55°) ----
-  turn_relative(55.0f);                     // left turn (mirror)
+  // ---- Step 3: turn -115° robot-centric (your tuned angle) ----
+  turn_relative(-120.0f);                    // left-ish turn as you tuned
   float H2 = chassis.get_absolute_heading(); // new field heading
 
   // ==============================
-  //  MID-GOAL SCORING (mirror)
-  //  uses scoreMid instead of low-goal push-up
+  //  MID-GOAL SCORING
+  //  (uses scoreMid instead of low-goal push-up)
   // ==============================
 
   // Drive into position for the middle-height goal
-  chassis.drive_distance(11.0f, H2,
+  chassis.drive_distance(-17.0f, H2,
                          12.0f,  // strong drive
                          7.0f);  // strong heading correction
 
-  wait(250, msec);
 
   // Fire into the mid-height goal
-  scoreMid(480);   // topIntake spinFor(..., false) → non-blocking
+  scoreMid(480);   // mid goal (scoreMid), as requested
+  intake(250);
 
   // Optional: small settle time to let triballs clear
-  wait(1000, msec);
+  wait(1200, msec);
 
-  // Back away from the goal
-  chassis.drive_distance(-10.0f, H2,
-                         12.0f,
-                         6.7f);
+  topIntake.stop(brake);
 
-  // ---- Step 5: drive backwards 39" holding heading H2 ----
-  chassis.drive_distance(-39.0f, H2,
-                         8.0f,
-                         3.0f);
+  // Forward away from the goal
+  chassis.drive_distance(43.0f, H2,
+                         10.0f,
+                         5.0f);
+
+
 
   // ---- Step 6: turn to 180° field-centric (tank turn) ----
   chassis.turn_to_angle(180.0f);
@@ -392,11 +492,13 @@ void left_side() {
 
   // At this pose you may be nearer a back/side wall again.
   // To avoid pushbacks messing with X, correct Y-only here:
+
+  // PUSHBACKS? THE 2025-2026 VEX V5 ROBOTICS COMPETITION?
   distanceOdomCorrect(false, true);
 
-  // ---- Step 7: drive forward 15.5" holding 180° with timeout ----
+  // ---- Step 7: drive forward 21.5" holding 180° with timeout ----
   // distance, heading,  driveV, headingV,  settle_error, settle_time(ms), timeout(ms)
-  chassis.drive_distance(15.5f, H180,
+  chassis.drive_distance(21.0f, H180,
                          6.0f,   // drive max voltage
                          3.0f,   // heading max voltage
                          1.5f,   // settle error (inches)
@@ -405,15 +507,15 @@ void left_side() {
   );
 
   wait(500, msec);
-  scoreHigh(480);
-
+  
   // ---- Step 8: back up 28" holding 180° ----
-  // Launch a background task that will start scoreHigh
-  // once we've moved about 14" from where this backup starts.
-  task scoreHalfTask(scoreHighHalfwayTask);
-
-  // One continuous backing move; no mid-stop.
-  chassis.drive_distance(-28.0f, H180,
+  // First half
+  chassis.drive_distance(-14.0f, H180,
+                         10.0f,
+                         4.0f);
+  scoreHigh(480);  // high-goal scoring at the end (you had this)
+  // Second half
+  chassis.drive_distance(-14.0f, H180,
                          10.0f,
                          4.0f);
 
@@ -429,247 +531,22 @@ void left_side() {
 
 
 
+// The giant commented legacy autons you had before this point are kept as-is
+// so you can still reference them, but they don’t affect compilation.
+
+/*
 //   chassis.turn_timeout = 1000;
 //   chassis.drive_timeout = 2000;
 //   chassis.drive_max_voltage = 8;
 //   chassis.turn_max_voltage = 6;
 //   chassis.set_heading(0);
-//   wait(5, msec);
-//   intake(430);
-//   chassis.drive_distance(33, 0, 7, 2);
-//   intake(0);
-//   chassis.drive_distance(-10);
-//   chassis.turn_to_angle(-80);
-  
-//   /* THIS IS THE SENSIBLE TECH*/
-//   // chassis.drive_distance(-3);
-//   // wait(750, msec);
-//   // chassis.drive_with_voltage(12, 12);
-//   // chassis.drive_distance(5.25);
-  
-//   /* THIS IS THE PUSHUP TECH*/
-//   //RAMNINGNGNGGNGN SPEEDDDDDD
-//   chassis.drive_distance(11, -80, 12, 7);
-//   wait(250, msec);
-//   scraper.set(1);
-//   outtake(480);
-//   chassis.drive_distance(2, -80, 12, 6.7);
-//   wait(1000, msec);
-//   scraper.set(0);
-//   chassis.drive_distance(-10, -90, 12, 6.7);
-//   // wait(100, msec);
-//   chassis.drive_distance(-34, -90, 8, 6.7);
-//   chassis.turn_to_angle(141);
-//   scraper.set(1);
-//   wait(230, msec);
-//   intake(480);
-//   chassis.drive_with_voltage(6, 6);
-//   chassis.drive_distance(17.67, 141, 6, 4);
-//   wait(500, msec);
-//   for (int i = 0; i < 3; i++) {
-//     chassis.drive_distance(1.1, -141, 12, 12);
-//     chassis.drive_distance(-1.1, -141, 12, 12);
-//   }
-//   // chassis.drive_distance(-4);
-//   // chassis.drive_distance(0);
-//   wait(5, msec);
-//   chassis.drive_distance(-20, 142, 12, 3);
-//   scoreHigh(480);
-//   chassis.drive_distance(-6, 142, 12, 3);
-// //   chassis.turn_to_angle(6);
-// //   intake(480);
-// //   wait(5, msec);
-// //   chassis.drive_distance(19.5);
-// //   wait(200, msec);
-// //   bottomIntake.stop(brake);
-// //   lowerMiddleIntake.stop(brake);
-// //   upperMiddleIntake.stop(brake);
-// //   chassis.drive_distance(0);
-// //   chassis.turn_to_angle(7);
-// //   chassis.drive_distance(6.7);
-// //   chassis.drive_distance(0);
-// //   wait(5, msec);
-// //   chassis.turn_to_angle(-46.5);
-// //   wait(5, msec);
-// //   chassis.drive_distance(12.5);
-// //   wait(25, msec);
-// //   outtake(200);
-// //   chassis.drive_distance(0);
-// //   scraper.set(true);
-// //   wait(5, msec);
-// //   outtake(200);
-// //   scoreMid(200);
-// //   wait(925, msec);
-// //   topIntake.stop(coast);
-// //   // // scoreMid(520);
-// //   wait(300, msec);
-// //   bottomIntake.stop(coast);
-// //   lowerMiddleIntake.stop(coast);
-// //   upperMiddleIntake.stop(coast);
-// //   scraper.set(false);
-// //   // wait(1350, msec);
-// //   // topIntake.stop(coast);
-// //   // scoreMid(520);
-// //   topIntake.stop(coast);
-// //   chassis.drive_max_voltage = 12;
-// //   chassis.turn_to_angle(-50.5);
-// //   chassis.drive_distance(-37);
-// //   wait(5, msec);
-// //   chassis.drive_max_voltage = 8;
-// //   chassis.turn_to_angle(180);
-// //   wait(5, msec);
-// //   scraper.set(true);
-// //   wait(230, msec);
-// //   intake(200);
-// //   chassis.drive_distance(14);
-// //   chassis.drive_distance(0);
-// //   wait(5, msec);
-// //   chassis.drive_distance(-4);
-// //   chassis.drive_distance(0);
-// //   wait(5, msec);
-// //   chassis.drive_distance(-30);
-// //   scoreHigh(200);
-// //   // 
-// //   Controller.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
-// //   wait(15, msec);
-// void left_side() {
-//   chassis.turn_timeout = 1000;
-//   chassis.drive_timeout = 1500;
-//   chassis.drive_max_voltage = 6;
-//   chassis.turn_max_voltage = 6;
-//   chassis.set_heading(0);
-//   wait(5, msec);
-//   chassis.turn_to_angle(-7);
-//   jonathanSpecialMarkOne(480);
-//   chassis.drive_distance(19);
-//   // chassis.drive_distance(0);
-//   chassis.turn_to_angle(-7);
-//   chassis.drive_distance(5.2);
-//   wait(5, msec);
-//   bottomIntake.stop(brake);
-//   lowerMiddleIntake.stop(brake);
-//   upperMiddleIntake.stop(brake);
-//   //this part gets changed
-//   chassis.turn_to_angle(-135);
-//   wait(5, msec);  
-//   chassis.drive_distance(-17);
-//   // chassis.drive_distance(0);
-//   wait(5, msec);
-//   outtake(200);
-//   wait(1, msec);
-//   intakeForScoring(200);
-//   scoreHigh(200);
-//   // wait(1350, msec);
-//   // topIntake.stop(coast);
-//   // scoreMid(520);
-//   wait(1650, msec);
-//   bottomIntake.stop(coast);
-//   lowerMiddleIntake.stop(coast);
-//   upperMiddleIntake.stop(coast);
-//   topIntake.stop(coast);
-//   // chassis.turn_max_voltage = 12;
-//   // chassis.turn_to_angle(45);
-//   // topIntake.stop(coast);
-//   chassis.drive_max_voltage = 9;
-//   scoreHigh(20);
-//   outtake(20);
-  
-//   chassis.drive_distance(44);
-//   topIntake.stop(coast);
-//   wait(5, msec);
-//   bottomIntake.stop(coast);
-//   lowerMiddleIntake.stop(coast);
-//   upperMiddleIntake.stop(coast);
-//   chassis.drive_max_voltage = 5;
-//   chassis.drive_distance(0);
-//   chassis.turn_to_angle(180);
-//   wait(5, msec);
-//   scraper.set(true);
-//   wait(200, msec);
-//   jonathanSpecialMarkOne(200);
-//   scoreHigh(25);
-//   chassis.drive_distance(13);
-//   // chassis.drive_max_voltage = 12;
-//   // chassis.drive_timeout = 100;
-//   // chassis.drive_distance(-5);
-//   // // chassis.drive_distance(0);
-//   // chassis.drive_distance(5);
-//   // chassis.drive_distance(0);
-//   chassis.drive_timeout = 1250;
-//   chassis.drive_max_voltage = 12;
-//   // wait(2, msec);
-//   chassis.drive_distance(-5);
-//   wait(2, msec);
-//   chassis.turn_to_angle(180);
-//   // outtake(30);
-//   upperUnclogger(200);
-//   chassis.drive_distance(-30);
-//   topIntake.stop(coast);
-//   upperMiddleIntake.stop(coast);
-//   lowerMiddleIntake.stop(coast);
-//   wait(210, msec);
-//   intakeForScoring(200);
-//   scoreHigh(200);
-//   // 
+//   ...
 //   Controller.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
 //   wait(15, msec);
 // }
 
 //   chassis.turn_to_angle(6);
 //   intake(480);
-//   wait(5, msec);
-//   chassis.drive_distance(19.5);
-//   wait(200, msec);
-//   bottomIntake.stop(brake);
-//   lowerMiddleIntake.stop(brake);
-//   upperMiddleIntake.stop(brake);
-//   chassis.drive_distance(0);
-//   chassis.turn_to_angle(7);
-//   chassis.drive_distance(6.7);
-//   chassis.drive_distance(0);
-//   wait(5, msec);
-//   chassis.turn_to_angle(-46.5);
-//   wait(5, msec);
-//   chassis.drive_distance(12.5);
-//   wait(25, msec);
-//   outtake(200);
-//   chassis.drive_distance(0);
-//   scraper.set(true);
-//   wait(5, msec);
-//   outtake(200);
-//   scoreMid(200);
-//   wait(925, msec);
-//   topIntake.stop(coast);
-//   // // scoreMid(520);
-//   wait(300, msec);
-//   bottomIntake.stop(coast);
-//   lowerMiddleIntake.stop(coast);
-//   upperMiddleIntake.stop(coast);
-//   scraper.set(false);
-//   // wait(1350, msec);
-//   // topIntake.stop(coast);
-//   // scoreMid(520);
-//   topIntake.stop(coast);
-//   chassis.drive_max_voltage = 12;
-//   chassis.turn_to_angle(-50.5);
-//   chassis.drive_distance(-37);
-//   wait(5, msec);
-//   chassis.drive_max_voltage = 8;
-//   chassis.turn_to_angle(180);
-//   wait(5, msec);
-//   scraper.set(true);
-//   wait(230, msec);
-//   intake(200);
-//   chassis.drive_distance(14);
-//   chassis.drive_distance(0);
-//   wait(5, msec);
-//   chassis.drive_distance(-4);
-//   chassis.drive_distance(0);
-//   wait(5, msec);
-//   chassis.drive_distance(-30);
-//   scoreHigh(200);
-//   // 
-//   Controller.Screen.print("sdhgfisdjgbndjgbdgkdbgfjdg");
-//   wait(15, msec);
-//all intakes fwd
+//   ...
 // minecraft golf club?
+*/

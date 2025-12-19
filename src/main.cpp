@@ -109,14 +109,17 @@ void pre_auton() {
 /**
  * autonomous
  */
+extern void startIntakeAntiJam();
+extern void stopIntakeAntiJam();
 
 void autonomous(void) {
   auto_started = true;
-
+ startIntakeAntiJam();
   // Currently using your existing auton:
-  right_side();
+  //right_side();
   // If you want to run a specific test instead, call it here instead of right_side().
-
+  left_side();
+stopIntakeAntiJam();
   wait(15, msec);
 }
 
