@@ -355,7 +355,7 @@ void right_side() {
                          6.7f);
 
   // ---- Step 5: drive backwards 41" holding heading H2 ----
-  chassis.drive_distance(-41.0f, H2,
+  chassis.drive_distance(-30.0f, H2,
                          8.0f,
                          3.0f);
 
@@ -534,6 +534,10 @@ void left_side() {
 // The giant commented legacy autons you had before this point are kept as-is
 // so you can still reference them, but they don’t affect compilation.
 
+
+//well so much for that
+//
+//
 /*
 //   chassis.turn_timeout = 1000;
 //   chassis.drive_timeout = 2000;

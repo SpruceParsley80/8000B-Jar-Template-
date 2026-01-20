@@ -1,0 +1,18 @@
+{
+	"project": {
+		"name": "8000BJarTemplateMarkTwo",
+		"slot": 1,
+		"description": "Empty V5 C++ Project",
+		"platform": "V5",
+		"creationDate": "Tue, 20 Jan 2026 23:48:45 GMT",
+		"language": "cpp",
+		"sdkVersion": "V5_20240802_15_00_00",
+		"cpp": {
+			"includePath": []
+		}
+	},
+	"extension": {
+		"version": "0.8.2026011200",
+		"json": 1
+	}
+}
