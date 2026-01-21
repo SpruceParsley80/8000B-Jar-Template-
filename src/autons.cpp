@@ -470,7 +470,7 @@ void left_side() {
   scoreMid(480);   // mid goal (scoreMid), as requested
   intake(250);
 
-  // Optional: small settle time to let triballs clear
+  // Optional: small settle time to let triballs clear //me when chatgpt still doesnt know what 67 is after every human moved on from it already
   wait(1200, msec);
 
   topIntake.stop(brake);
@@ -533,6 +533,8 @@ void left_side() {
 
 // The giant commented legacy autons you had before this point are kept as-is
 // so you can still reference them, but they don’t affect compilation.
+//yeah they got obliterated
+//*snoopy voice* curse you robber baron (and by that i mean chatgpt of course)
 
 
 //well so much for that
